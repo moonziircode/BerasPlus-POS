@@ -1,0 +1,172 @@
+'use client'
+import { AlertTriangle, TrendingUp, TrendingDown, Minus, CheckCircle, Clock, ChevronDown, ChevronRight, PackageOpen } from 'lucide-react'
+
+export function StokMenipisWidget() {
+  return (
+    <div className="p-5 rounded-2xl border border-slate-800 bg-slate-800/50">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="font-semibold text-slate-200">Stok Menipis (Perlu Dibeli)</h3>
+        <span className="text-xs text-emerald-400 cursor-pointer">Lihat Semua</span>
+      </div>
+      <div className="space-y-3">
+        <AlertItem name="Broken" pack="Sisa 40 Kg" alert="Estimasi habis" days="2 Hari" type="critical" />
+        <AlertItem name="Pandan Wangi" pack="Sisa 15 Kg" alert="" days="3 Hari" type="danger" />
+        <AlertItem name="Premium" pack="Sisa 60 Kg" alert="" days="4 Hari" type="warning" />
+        <AlertItem name="Ketan Putih" pack="Sisa 25 Kg" alert="" days="5 Hari" type="danger" />
+      </div>
+    </div>
+  )
+}
+
+function AlertItem({name, pack, alert, days, type}: any) {
+  const isDanger = type === 'danger' || type === 'critical';
+  return (
+    <div className={`flex items-center justify-between p-3 rounded-xl ${type === 'critical' ? 'bg-rose-950/20 border border-rose-900/30' : 'bg-slate-900/50'}`}>
+      <div className="flex items-center gap-3">
+        <div className={`p-1.5 rounded-lg ${isDanger ? 'bg-rose-950/50 text-rose-500' : 'bg-amber-950/50 text-amber-500'}`}><PackageOpen className="w-4 h-4" /></div>
+        <div>
+          <div className="text-sm font-medium text-slate-200">{name}</div>
+          <div className="text-xs text-slate-400">{pack}</div>
+        </div>
+      </div>
+      <div className="text-right">
+        {alert && <div className="text-[10px] text-rose-400">{alert}</div>}
+        <div className={`text-sm font-bold ${isDanger ? 'text-rose-400' : 'text-amber-400'}`}>{days}</div>
+      </div>
+    </div>
+  )
+}
+
+export function ProdukTerlaris() {
+  return (
+    <div className="p-5 rounded-2xl border border-slate-800 bg-slate-800/50">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-semibold text-slate-200 text-sm">Produk Terlaris</h3>
+        <div className="flex items-center gap-2 bg-slate-900 border border-slate-700 text-slate-300 text-[10px] rounded px-2 py-1 cursor-pointer">
+          30 Hari Terakhir <ChevronDown className="w-3 h-3" />
+        </div>
+      </div>
+      <div className="space-y-4 mt-6">
+        <RankItem rank={1} name="Ramos Bandung" val="620 Kg" pct={90} />
+        <RankItem rank={2} name="Rumah Minang" val="520 Kg" pct={75} />
+        <RankItem rank={3} name="Premium 13K" val="410 Kg" pct={60} />
+        <RankItem rank={4} name="BMW" val="350 Kg" pct={50} />
+        <RankItem rank={5} name="Petrok" val="300 Kg" pct={40} />
+      </div>
+      <button className="w-full mt-5 py-2 text-xs font-medium text-slate-300 bg-slate-900 rounded-lg border border-slate-700 hover:bg-slate-700">Lihat Semua Produk</button>
+    </div>
+  )
+}
+
+function RankItem({rank, name, val, pct}: any) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-4 text-xs font-mono text-slate-500 text-right">{rank}</div>
+      <div className="flex-1">
+        <div className="flex justify-between text-xs text-slate-300 mb-1.5">
+          <span className={rank <= 2 ? 'bg-blue-900/50 text-blue-300 px-1.5 py-0.5 rounded' : ''}>{name}</span>
+          <span className="font-mono text-slate-400">{val}</span>
+        </div>
+        <div className="w-full bg-slate-900 rounded-full h-1 overflow-hidden">
+          <div className="h-1 rounded-full bg-blue-500" style={{width: `${pct}%`}}></div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function SupplierIntelligence() {
+  return (
+    <div className="p-5 rounded-2xl border border-slate-800 bg-slate-800/50">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="font-semibold text-slate-200 text-sm">Supplier Intelligence</h3>
+        <div className="flex items-center gap-2 bg-slate-900 border border-slate-700 text-slate-300 text-[10px] rounded px-2 py-1 cursor-pointer">
+          Harga Hari Ini <ChevronDown className="w-3 h-3" />
+        </div>
+      </div>
+      <div className="space-y-4">
+        <SuppItem name="IR Ahmad" sub="Medium" price="Rp 725.000" trend="+ 2%" up={false} />
+        <SuppItem name="Petrok" sub="BMW" price="Rp 780.000" trend="+ 5%" up={false} />
+        <SuppItem name="Jeruk Garut" sub="Pandan Wangi" price="Rp 760.000" trend="+ 1%" up={false} />
+        <SuppItem name="Rojolele" sub="Rojolele" price="Rp 810.000" trend="- 0%" up={null} />
+      </div>
+      <button className="w-full mt-5 py-2 text-xs font-medium text-slate-300 bg-slate-900 rounded-lg border border-slate-700 hover:bg-slate-700">Lihat Semua Supplier</button>
+    </div>
+  )
+}
+
+function SuppItem({name, sub, price, trend, up}: any) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-400 uppercase">{name.substring(0,2)}</div>
+        <div>
+          <div className="text-slate-200 text-xs font-medium">{name}</div>
+          <div className="text-slate-500 text-[10px]">{sub}</div>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="text-slate-300 font-mono text-xs">{price}</div>
+        <div className={`flex items-center gap-1 text-[10px] ${up === null ? 'text-slate-500' : up ? 'text-emerald-400' : 'text-rose-400'}`}>
+          {up === null ? <Minus className="w-3 h-3" /> : up ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />}
+          {trend}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function MarginProduk() {
+  return (
+    <div className="p-5 rounded-2xl border border-slate-800 bg-slate-800/50">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="font-semibold text-slate-200 text-sm">Margin Produk</h3>
+        <div className="flex items-center gap-2 bg-slate-900 border border-slate-700 text-slate-300 text-[10px] rounded px-2 py-1 cursor-pointer">
+          30 Hari Terakhir <ChevronDown className="w-3 h-3" />
+        </div>
+      </div>
+      <div className="space-y-4 mt-6">
+        <RankItem rank="" name="Ciranjang" val="26%" pct={90} />
+        <RankItem rank="" name="Rumah Minang" val="22%" pct={75} />
+        <RankItem rank="" name="Ramos Bandung" val="21%" pct={70} />
+        <RankItem rank="" name="Premium 13K" val="17%" pct={50} />
+        <RankItem rank="" name="BMW" val="18%" pct={55} />
+      </div>
+      <button className="w-full mt-5 py-2 text-xs font-medium text-slate-300 bg-slate-900 rounded-lg border border-slate-700 hover:bg-slate-700">Lihat Analisis Lengkap</button>
+    </div>
+  )
+}
+
+export function MixingHariIni() {
+  return (
+    <div className="p-5 rounded-2xl border border-slate-800 bg-slate-800/50">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="font-semibold text-slate-200 text-sm">Mixing Hari Ini</h3>
+        <span className="text-[10px] flex items-center text-emerald-400 cursor-pointer">Lihat Semua <ChevronRight className="w-3 h-3" /></span>
+      </div>
+      <div className="space-y-4">
+        <MixItem id="#120" name="Rumah Minang" qty="120 Kg" status="Selesai" time="08:30" icon={<CheckCircle className="w-4 h-4 text-emerald-400" />} bg="bg-emerald-950/30 border-emerald-900/50" />
+        <MixItem id="#121" name="Ciranjang" qty="80 Kg" status="Proses" time="09:15" icon={<Clock className="w-4 h-4 text-amber-400" />} bg="bg-amber-950/30 border-amber-900/50" />
+        <MixItem id="#122" name="Ramos Bandung" qty="150 Kg" status="Menunggu" time="10:00" icon={<Clock className="w-4 h-4 text-blue-400" />} bg="bg-blue-950/30 border-blue-900/50" />
+      </div>
+    </div>
+  )
+}
+
+function MixItem({id, name, qty, status, time, icon, bg}: any) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <div className={`p-2 rounded-xl border ${bg}`}>{icon}</div>
+        <div>
+          <div className="text-slate-200 text-xs font-medium">Batch {id}</div>
+          <div className="text-slate-400 text-[10px]">{name} • {qty}</div>
+        </div>
+      </div>
+      <div className="text-right">
+        <div className={`text-xs ${status === 'Selesai' ? 'text-emerald-400' : status === 'Proses' ? 'text-amber-400' : 'text-blue-400'}`}>{status}</div>
+        <div className="text-slate-500 text-[10px]">{time}</div>
+      </div>
+    </div>
+  )
+}
