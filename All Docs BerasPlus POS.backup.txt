@@ -1,0 +1,1086 @@
+PRODUCT REQUIREMENTS DOCUMENT (PRD)
+Sistem Kasir dan Manajemen Inventaris BerasPlus POS
+Nama Proyek
+BerasPlus POS
+Versi Dokumen
+4.0 (Final Architecture)
+Tanggal Rilis
+21 Juni 2026
+Status Proyek
+FINAL - READY FOR DEVELOPMENT
+
+1. PROJECT OVERVIEW (GAMBARAN UMUM PROYEK)
+1.1 Project Name (Nama Proyek)
+BerasPlus POS
+1.2 Project Description (Deskripsi Proyek)
+BerasPlus POS adalah sebuah sistem manajemen bisnis dan kasir atau Point-of-Sale (sistem kasir digital) komprehensif yang dirancang spesifik untuk model bisnis retail (eceran) beras multi-cabang yang memiliki elemen manufaktur ringan (proses pengolahan sederhana). Sistem ini berbasis cloud (sistem penyimpanan data terpusat menggunakan jaringan internet/awan), dengan aplikasi manajemen terpusat yang diakses via web browser (peramban internet) oleh Owner (pemilik bisnis), dan aplikasi kasir yang berjalan secara native (aplikasi yang dibuat khusus untuk platform tertentu) di tablet Android untuk operasional toko harian.
+Fungsi inti dari sistem ini melampaui aplikasi kasir tradisional, mencakup manajemen bahan baku, pengelolaan resep/formula untuk pencampuran (mixing) dan pengemasan ulang (repacking), pelacakan batch produksi (kelompok produksi beras), manajemen inventaris multi-lokasi, proses pengadaan barang (purchasing), hingga pelaporan finansial dan operasional yang mendalam. Aplikasi kasir dirancang untuk tetap fungsional saat koneksi internet terputus (offline mode) untuk menjamin kelancaran bisnis tanpa hambatan.
+1.3 Background (Latar Belakang)
+Kondisi Saat Ini: Operasional bisnis saat ini sepenuhnya manual. Setiap cabang mencatat penjualan di buku kas fisik, menghitung stok dengan pengecekan fisik secara sporadis (acak/tidak berkala), dan menggunakan kalkulator manual untuk transaksi harian. Komunikasi antara Owner dan staf toko sangat bergantung pada panggilan telepon, pesan WhatsApp, dan laporan lisan yang tidak terstruktur. Kondisi ini menyebabkan tidak adanya sumber data tunggal yang valid atau single source of truth.
+Masalah Yang Ingin Diselesaikan:
+Stok & HPP Tidak Akurat: Masalah terbesar adalah ketidakmampuan melacak konversi dari bahan baku (beras karungan) menjadi produk jual jadi (beras eceran/campuran). Hal ini menyebabkan data stok menjadi ilusi, serta perhitungan Harga Pokok Penjualan (HPP) dan profitabilitas (tingkat keuntungan) menjadi tidak valid.
+Layanan Pelanggan Lambat: Proses manual di meja kasir (mencari harga, menghitung manual, mencatat buku) menyebabkan antrian panjang saat jam sibuk, berpotensi menurunkan kepuasan pelanggan dan hilangnya peluang penjualan.
+Risiko Finansial Tinggi: Potensi kebocoran finansial seperti fraud (kecurangan atau tindakan ilegal), kesalahan input data, dan selisih kas sangat tinggi karena ketiadaan sistem kontrol dan audit digital otomatis.
+Keputusan Bisnis Berbasis Perasaan: Tanpa data yang akurat dan real-time (data langsung pada waktu aktual), keputusan strategis seperti kapan harus membeli stok, produk mana yang paling menguntungkan, dan toko mana yang berkinerja terbaik, hanya didasarkan pada intuisi subjektif.
+Hambatan Skalabilitas: Model operasional manual saat ini mustahil untuk direplikasi secara efisien untuk membuka cabang baru maupun gudang pusat distribusi.
+Proses Bisnis Saat Ini: Alur kerja inti bisnis adalah: (1) Membeli berbagai jenis beras dalam karung besar dari beberapa supplier (pemasok). (2) Secara manual, staf melakukan pencampuran (oplos) beberapa jenis beras atau mengemas ulang (repack) menjadi ukuran yang lebih kecil. (3) Produk hasil proses pengolahan tersebut dijual kepada pelanggan akhir. Proses pencatatan untuk transformasi ini belum ada, sehingga stok awal dan stok akhir gudang tidak pernah cocok.
+Keterbatasan Sistem Saat Ini: Tidak ada sistem digital sama sekali. Keterbatasan fundamental adalah tidak adanya alat untuk mencatat, mengelola, dan menganalisis data operasional serta finansial secara terpusat dan akurat.
+1.4 Business Goals (Tujuan Bisnis)
+Jangka Pendek (3-6 Bulan):
+Mendigitalkan core loop (alur kerja inti operasional bisnis) dengan mengimplementasikan sistem secara penuh di semua cabang untuk mencatat setiap transaksi penjualan, pembelian, pencampuran, dan pengemasan ulang.
+Mencapai tingkat akurasi data stok dan HPP yang andal sebagai satu-satunya sumber kebenaran data operasional.
+Memberdayakan Owner dengan menyediakan dashboard (panel kendali visual) real-time untuk memantau kesehatan bisnis setiap saat dari mana saja.
+Jangka Menengah (6-18 Bulan):
+Optimalisasi & Efisiensi: Menggunakan data terkumpul untuk mengoptimalkan tingkat stok minimum, merampingkan proses pembelian ke supplier, dan meningkatkan profitabilitas dengan menganalisis produk/toko berkinerja terbaik.
+Standarisasi SOP (Standard Operating Procedure / Standar Operasional Prosedur): Menjadikan sistem sebagai tulang punggung SOP yang seragam di seluruh cabang untuk mempermudah pelatihan staf baru.
+Meningkatkan Fondasi Gudang: Mempersiapkan arsitektur master data dan alur transfer stok agar siap mendukung operasional gudang pusat distribusi.
+Jangka Panjang (18+ Bulan):
+Memfasilitasi ekspansi bisnis secara cepat dan efisien untuk mempermudah proses pembukaan cabang-cabang baru.
+Ekspansi ke sistem omnichannel (integrasi seluruh saluran penjualan) dengan menghubungkan sistem POS ke platform e-commerce dan layanan WhatsApp otomatis.
+Menjadi bisnis modern berbasis data melalui analitik prediktif (analisis data untuk meramal masa depan) guna peramalan penjualan dan manajemen stok masa depan.
+1.5 Success Metrics (Metrik / Ukuran Keberhasilan)
+Target Operasional: Waktu rata-rata per transaksi kasir (dari scan produk pertama hingga struk tercetak) wajib di bawah 60 detik. Rekonsiliasi kas harian toko selesai dalam waktu kurang dari 15 menit.
+Target Inventory: Tingkat akurasi stok fisik vs sistem mencapai > 98%. Laporan Batch Traceability (pelacakan batch produksi) mampu merunut produk jual kembali ke dokumen pembelian asal dalam waktu kurang dari 5 menit.
+Target Penjualan: Tidak ada transaksi yang hilang atau tidak tercatat selama gangguan internet berlangsung berkat fungsi mode offline.
+Target Profit: Laporan laba rugi per produk dan per cabang dapat diakses secara instan dan akurat tanpa rekapitulasi manual.
+Target Efisiensi: Kebutuhan Owner menghubungi cabang secara manual untuk menanyakan omzet atau stok berkurang hingga 0%.
+2. BUSINESS PROFILE (PROFIL BISNIS)
+2.1 Company Information (Informasi Perusahaan)
+Perusahaan swasta yang berfokus pada bisnis retail beras, melayani konsumen akhir secara langsung menggunakan model operasional B2C (Business to Consumer / Penjualan langsung ke konsumen akhir).
+2.2 Business Model (Model Bisnis)
+Model bisnis unik yang menggabungkan karakteristik Retail (eceran) dan Light Manufacturing (manufaktur ringan / proses pengolahan kemasan sederhana):
+Aspek Manufaktur: Pembelian bahan mentah (raw material), pengolahan melalui formulasi resep khusus (mixing/repacking), dan penciptaan barang jadi siap edar (selling product) dengan HPP dihitung terkomputerisasi berdasarkan total komponen penyusunnya.
+Aspek Retail: Penjualan produk beras secara langsung kepada pelanggan melalui jaringan toko fisik. Bisnis beras ini menyediakan opsi penjualan dalam satuan liter eceran maupun ukuran karung kemasan khusus mulai dari berat 5kg hingga 50kg.
+2.3 Store Structure (Struktur Toko)
+Jumlah Toko: Saat ini memiliki dan mengoperasikan 3 cabang toko fisik secara aktif.
+Jumlah User Per Toko: Setiap cabang diawasi oleh 1-2 staf Kasir per shift operasional. Peran Owner dan tim Purchasing dikelola secara terpusat dari kantor manajemen.
+Jam Operasional: Menyesuaikan dengan pasar retail, beroperasi selama 12-14 jam per hari.
+2.4 Future Expansion Plan (Rencana Ekspansi Masa Depan)
+Gudang Pusat: Pendirian fasilitas gudang pusat distribusi dalam jangka menengah sebagai titik gerbang utama penerimaan semua bahan baku dari supplier sekaligus pusat utama pengolahan mixing dan repacking. Sistem wajib memisahkan hak akses entitas "Toko" dan "Gudang".
+E-Commerce: Penjualan digital melalui arsitektur terintegrasi API (Application Programming Interface / Antarmuka Pemrograman Aplikasi) untuk sinkronisasi otomatis stok, katalog produk, dan pesanan masuk dari pihak eksternal.
+WhatsApp Integration: Konektivitas WhatsApp untuk pengiriman otomatis notifikasi ringkasan bisnis harian kepada Owner serta media pemasaran interaktif.
+Distribusi Antar Cabang: Fitur pelacakan manajemen logistik internal untuk mengawal transfer mutasi stok berskala besar dari gudang terpusat ke cabang-cabang retail.
+3. USER & ROLE MANAGEMENT (MANAJEMEN PERAN & PENGGUNA)
+3.1 User Types (Tipe Pengguna)
+Owner: Pemilik dengan hak akses global penuh. Bertanggung jawab memantau kesehatan performa bisnis, menentukan kebijakan harga, melakukan persetujuan transaksi sensitif, dan menganalisis laporan.
+Kasir: Staf garda depan cabang toko. Bertugas mengoperasikan aplikasi kasir Android untuk melayani transaksi retail, mencatat mutasi stok harian (produksi lokal, penerimaan PO), serta melakukan prosedur penutupan kasir.
+Purchasing: Staf pengadaan barang. Fokus menyusun dokumen Purchase Order (PO / Pesanan Pembelian) ke pihak supplier serta memantau status jatuh tempo pembayaran tagihan.
+Warehouse Staff (Masa Depan): Staf logistik gudang pusat yang bertanggung jawab menerima pasokan dari pemasok, mengawal proses produksi skala besar, serta memproses penyiapan pengiriman barang ke cabang toko.
+Supervisor & Finance Staff (Masa Depan): Supervisor memiliki akses khusus membaca (read-only) performa wilayah kerjanya. Finance Staff fokus mengelola akuntansi, pembayaran invoice tagihan, serta kebutuhan audit keuangan.
+3.2 Permission Matrix (Matriks Hak Akses Modul)
+Modul / Aksi
+Owner
+Kasir (di Tokonya)
+Purchasing
+ 
+Dashboard
+View All
+No Access
+No Access
+Inventory
+CRUD All Data
+Read, Request Adjustment, Create Production
+Read Only
+Purchasing
+CRUD All POs
+Read Only (Penerimaan)
+CRUD All POs
+Product & Recipe
+CRUD All Masters
+Read Only
+Read Only
+Price
+Update All Prices
+Read Only
+No Access
+Sales (POS)
+CRUD All Transactions
+Create & Read Own
+No Access
+Reports
+Read All Reports
+Read Own Store Reports
+Read Purchasing Reports
+Settings
+CRUD All Settings
+No Access
+No Access
+
+* CRUD: Create, Read, Update, Delete (Aksi Membuat, Membaca, Mengubah, dan Menghapus Data pada sistem database).
+3.3 Authentication (Mekanisme Autentikasi Keamanan)
+Login memanfaatkan verifikasi Email dan Password berkriteria aman (minimal 8 karakter wajib berisi kombinasi huruf besar, kecil, dan angka) dengan fitur tautan lupa sandi. Sesi aktif pada web manajemen Owner dibatasi durasi kedaluwarsa maksimal 8 jam. Di sisi lain, aplikasi kasir Android akan mengunci layar otomatis dan mewajibkan input PIN 4 digit jika mendeteksi tidak adanya aktivitas interaksi staf selama 15 menit. Saat internet terputus, autentikasi offline tetap berjalan normal memanfaatkan data kredensial terenkripsi yang tersimpan lokal di perangkat tablet.
+4. MASTER DATA (ARSITEKTUR DATA MASTER)
+4.1 Product Master (Konsep Induk Umum Produk)
+Struktur arsitektur produk dalam sistem menaungi seluruh klasifikasi item fisik bisnis, yang secara modular dipisahkan ke dalam beberapa sub-entitas master khusus di bawah ini.
+4.2 Raw Material Master (Master Bahan Baku)
+Merupakan entitas untuk item mentah beras yang dipasok oleh supplier dan ditujukan khusus sebagai input produksi pencampuran. Atribut sistem mendefinisikan item ini tidak memiliki nilai harga komersial sehingga otomatis terblokir untuk muncul di keranjang belanja kasir cabang. Contoh data: "Beras IR64 Super 50 Kg", "Beras Pandan Wangi Cianjur 50 Kg". Parameter field: Kode Bahan, Nama Bahan, Kategori, Unit Beli, Berat Bersih Konversi, dan Supplier bawaan.
+4.3 Selling Product Master (Master Produk Jual SKU)
+Item beras hasil transformasi produksi pencampuran atau pengemasan ulang yang dipasarkan resmi ke konsumen. Entitas ini diidentifikasi unik sebagai SKU (Stock Keeping Unit / Kode unik identifikasi produk). Contoh data: "Beras Premium Mix 5 Kg", "Beras Ramos Eceran 1 Liter". Atribut wajib sistem meliputi: SKU, Nama Produk, Kategori, Unit Jual, Harga Retail, HPP Bergerak, Batas Stok Minimum, dan tautan relasi kode formula resep terkait.
+4.4 Packaging Master (Master Material Kemasan)
+Entitas data master terpisah khusus melacak kuantitas dan kalkulasi beban pengeluaran inventaris plastik pembungkus maupun karung sablon merek. Contoh data: "Plastik Vakum 5 Kg", "Karung Merek BerasPlus 10 Kg". Kolom parameter mencakup: Kode Kemasan, Nama Variasi, Ukuran Dimensi, serta Nilai Harga Beli per Pcs.
+4.5 Supplier Master (Master Pengusaha Pemasok)
+Sesuai keputusan operasional, identifikasi seluruh mitra pemasok diubah menjadi entitas Pengusaha Pemasok. Record mendokumentasikan Nama, Alamat, Kontak Person, No. Telepon, dan Detail Rekening. Sistem secara berkala menghitung Supplier Performance Metrics (metrik kinerja pemasok) mencakup rata-rata harga pasokan, % akurasi ketepatan waktu pengiriman barang, dan % pemenuhan kuantitas volume pesanan.
+4.6 Store Master (Master Pengaturan Cabang Toko)
+Menyimpan profil operasional berupa Kode Cabang, Nama Lokasi Toko, Alamat Fisik, Nomor Telepon, Konfigurasi Perangkat (default printer kasir, jenis EDC aktif), serta field status kontinyu (Aktif, Tutup Sementara, Non-Aktif Permanen).
+5. PRODUCT & INVENTORY ARCHITECTURE (ARSITEKTUR PRODUK & INVENTARIS)
+5.1 Inventory Principles (Prinsip Dasar Pengelolaan Inventaris)
+Base Unit (Satuan Dasar Kilogram): Menggunakan Kilogram (Kg) sebagai landasan database internal. Seluruh kuantitas beras baik dalam karung grosir maupun eceran dikonversi mutlak ke Kg untuk menjamin ketepatan perhitungan susut berat dan manufaktur. Tampilan antarmuka kasir tetap menyajikan unit ramah pengguna (Karung, Liter, Pcs) dengan konversi otomatis secara instan.
+Conversion Rules (Aturan Baku Konversi Satuan): Hubungan nilai dikunci oleh Owner pada panel sistem. Contoh: 1 Karung Beras = 50 Kg; 1 Liter Beras Eceran = 0.82 Kg; 1 Pcs Plastik = 0.01 Kg.
+Inventory Ledger Rules (Jurnal Stok Digital): Setiap manipulasi kuantitas memicu pembuatan entri riwayat bersifat immutable (tidak dapat diubah/dihapus) pada jurnal digital. Entri wajib memuat: Timestamp (catatan waktu digital), Item ID, Lokasi Cabang, Tipe Transaksi (PEMBELIAN, PENJUALAN, PRODUKSI_IN, PRODUKSI_OUT, TRANSFER_IN, TRANSFER_OUT, ADJUSTMENT), Kuantitas Kg, dan ID Dokumen Referensi (No. Nota/PO/Batch).
+5.2 Inventory Locations (Manajemen Lokasi Inventaris)
+Sistem mengelompokkan stok ke beberapa lokasi logis independen demi keterlacakan aset:
+Store (Cabang Retail): Lokasi stok aktif yang siap dijual langsung atau diproduksi eceran di masing-masing cabang.
+Warehouse (Gudang Pusat - Masa Depan): Area logistik pusat untuk penerimaan massal supplier dan aktivitas produksi makro.
+Damaged Inventory: Lokasi karantina khusus mengisolasi barang rusak/kotor sebelum disetujui untuk dihapuskan (write-off).
+In-Transit Inventory: Lokasi virtual untuk menampung stok yang sedang dalam perjalanan ekspedisi mutasi antar cabang.
+5.3 Inventory Status (Status Klasifikasi Stok)
+Kuantitas barang di satu lokasi wajib diklasifikasikan ke dalam status: Available (bebas digunakan/dijual), Reserved (Masa Depan - terkunci pesanan online), atau Quarantined (sedang masa uji kualitas kualitas pasca penerimaan logistik supplier).
+5.4 Inventory Valuation (Metode Valuasi Nilai Stok)
+Sistem menggunakan metode komputasi keuangan Moving Average Cost (Biaya Rata-Rata Bergerak). Fluktuasi harga pasokan beras dari supplier diselesaikan otomatis secara berkala menggunakan rumus: HPP Rata-Rata Baru = ((Stok Lama × HPP Lama) + (Stok Baru × Harga Beli Baru)) / (Stok Lama + Stok Baru). Komponen HPP Produk Jual hasil racikan dihitung otomatis dari akumulasi total nilai HPP bahan baku terpakai ditambah biaya kemasan dan ongkos produksi tambahan.
+6. MIXING MANAGEMENT (MANAJEMEN PENCAMPURAN BERAS)
+6.1 Mixing Concept (Konsep Transformasi Formula)
+Mixing merupakan proses pengolahan manufaktur ringan yang meleburkan beberapa Bahan Baku karungan untuk memproduksi satu varian Produk Jual baru berdasar takaran formula tertentu. Eksekusi ini bersifat transaksional atomik (proses yang harus selesai sepenuhnya dan tidak bisa gagal di tengah jalan), yang berarti sistem secara simultan akan memotong kuantitas stok bahan baku di gudang dan langsung menambah saldo kuantitas stok produk jadi di etalase toko. Produk jual dilarang keras diinput kembali sebagai bahan mentah pencampuran.
+6.2 Recipe Management (Manajemen Master Resep)
+Resep merupakan blueprint cetak biru acuan produksi yang terdiri dari Recipe Header (Kode, Nama Resep, Target Output Kg), Recipe Inputs / Bill of Materials (Daftar komparasi berat bahan mentah Kg), Packaging Requirements (Kebutuhan plastik merek), dan batas wajar Standard Loss (Persentase penyusutan berat akibat debu/kotoran, misal diatur 1.5%). Penerapan riwayat Recipe Versioning bersifat wajib; setiap modifikasi formula resep otomatis diterbitkan sebagai nomor versi terbaru (V1, V2, dst) dan versi usang diarsipkan guna menjamin validitas penelusuran sejarah batch lama.
+6.3 Mixing Process (Alur Eksekusi Produksi)
+Staf memilih formula resep aktif di tablet kasir, lalu sistem otomatis memunculkan kalkulasi takaran bahan baku yang harus diambil dari stok Available. Pasca pencampuran fisik, staf menginput total kuantitas riil hasil timbangan barang jadi. Sistem langsung menerbitkan Nomor Batch Produksi unik terenkripsi (Contoh format: PROD-TKOA-210626-001) sebagai paspor pengenal riwayat HPP, resep penentu, dan batch PO pengadaan supplier asal.
+6.4 Mixing Validation Rules (Validasi Batasan Produksi)
+Sistem wajib mengunci tombol eksekusi produksi jika kuantitas saldo salah satu bahan baku mentah atau material kemasan di cabang terdata tidak mencukupi.
+Jika selisih susut berat riil lapangan (Total Berat Input - Total Berat Output aktual) membengkak melewati parameter wajar Standard Loss, status batch otomatis tertahan sebagai Pending Approval dan memerlukan persetujuan digital Owner untuk meloloskan stok produk tersebut ke pasar.
+7. REPACKING MANAGEMENT (MANAJEMEN PENGEMASAN ULANG)
+7.1 Repacking Concept (Prinsip Pembagian Kemasan)
+Repacking diartikan sebagai sub-proses manufaktur sederhana untuk memecah beras dari kontainer curah besar atau karung supplier 50 Kg menjadi beberapa unit variasi kemasan komersial kecil. Alur ini bersandar pada mesin arsitektur resep dan pencatatan nomor batch penelusuran yang serupa dengan modul mixing.
+7.2 Repacking Process (Alur Langkah Kerja Repacking)
+Operator menentukan Source Product (Bahan Baku mentah input, contoh: Beras IR64 50 Kg), lalu menetapkan item target luaran (Output Product, contoh: memecah menjadi 5 bungkus produk Beras kemasan 10 Kg). Kuantitas kemasan pembungkus wajib dideklarasikan terpisah agar stok kantong plastik terpotong akurat, dilanjutkan penerbitan kode pelacakan formal (Contoh: REPACK-TKOA-210626-001).
+7.3 Repacking Validation (Aturan Pengondisian Berat)
+Sistem mengontrol kepatuhan neraca massa melalui formula mutlak: Total Kuantitas Berat Input >= Total Kuantitas Berat Output. Pengecekan otomatis ketersediaan persediaan pembungkus dijalankan real-time, dan penahanan status rilis stok otomatis aktif jika kalkulasi penyusutan timbangan terdeteksi di luar batas kewajaran operasional.
+8. PURCHASING MANAGEMENT (MANAJEMEN PENGADAAN BARANG)
+8.1 Purchase Request (Permintaan Pengadaan Toko Internal)
+Fitur ini berstatus nice-to-have untuk pengembangan jangka panjang (fase pasca-MVP). Fungsinya memfasilitasi kasir cabang mengajukan draf permohonan restok internal saat data sistem mendeteksi stok bahan baku menyentuh parameter Stok Minimum. Permintaan dikirim ke dashboard Owner untuk dievaluasi sebelum diubah statusnya menjadi PO eksternal resmi.
+8.2 Purchase Order / PO (Surat Pesanan Pembelian Pemasok)
+Penyusunan dokumen PO dikendalikan penuh oleh Owner atau staf purchasing pusat. Komponen form PO tersusun atas:
+Header: Nomor PO Unik (terbit otomatis), Penanggalan PO, Identitas Pengusaha Pemasok, Destinasi Alamat Cabang, dan Estimasi Jadwal Tiba.
+Details: Katalog item bahan baku yang dipesan, volume kuantitas unit, nominal harga beli per unit (dapat disunting), dan subtotal baris data.
+Summary: Total akumulasi harga, komponen PPN (jika ada), ongkos logistik transportasi, dan total tagihan akhir.
+Status alur siklus hidup dokumen PO dimonitor sistem melalui parameter berikut:
+Draft: Dokumen pesanan sedang disusun oleh staf purchasing dan belum diterbitkan resmi.
+Submitted: Dokumen PO resmi dikirim ke pihak pemasok. Kuantitas barang otomatis terdata pada status "Stok Dipesan" (On Order) dalam sistem inventaris.
+Partially Received: Fisik barang kiriman pemasok baru tiba sebagian dari total pesanan asli PO.
+Fully Received: Keseluruhan kuantitas item barang pesanan telah lengkap mendarat di lokasi tujuan.
+Closed: Barang telah lengkap diterima 100% dan seluruh kewajiban invoice tagihan pemasok telah dilunasi penuh.
+Cancelled: Pembatalan formal dokumen PO sebelum dilakukannya aktivitas bongkar muat fisik barang.
+8.3 Receiving (Proses Penerimaan Fisik Muatan)
+Full Receiving: Kuantitas barang yang dibongkar cocok 100% dengan data manifest PO. Kuantitas inventaris bahan baku lokal langsung bertambah secara otomatis.
+Partial Receiving: Jumlah volume barang datang lebih sedikit dari kesepakatan PO. Sistem membukukan jumlah aktual yang mendarat, menambah stok riil, dan membiarkan status dokumen PO tetap aktif menggantung menunggu sisa sisa pengiriman berikutnya.
+Over Receiving (Penerimaan Berlebih): Kuantitas fisik barang datang melampaui data pesanan PO. Secara default, sistem memblokir pencatatan ini demi keamanan. Staf hanya bisa memproses masuk jika Owner memberikan input override (otorisasi akses khusus) pada sistem untuk memperbarui batas kuantitas dokumen PO asal.
+Staf penerima diwajibkan menginput berat bersih riil komoditas, mencatat kode Nomor Batch dari supplier, serta mendokumentasikan grade kualitas fisik beras demi kepentingan evaluasi rapor berkala vendor.
+8.4 Supplier Invoice (Pencatatan Nota Tagihan Pemasok)
+Modul administrasi keuangan untuk mencatat tagihan eksternal vendor. Satu berkas dokumen Supplier Invoice dapat dihubungkan ke beberapa nota transaksi penerimaan barang sekaligus untuk efisiensi administrasi. Sistem mewajibkan pengisian batas tanggal jatuh tempo pembayaran, dan secara otomatis menyalakan sinyal notifikasi di dashboard utama Owner 7 hari sebelum tenggat waktu berakhir. Status tagihan dipetakan menjadi: Unpaid, Partially Paid, dan Paid.
+9. INVENTORY OPERATIONS (OPERASIONAL MANAJEMEN STOK LOKAL)
+9.1 Stock Transfer (Mutasi Barang Antar Cabang Toko)
+Prosedur distribusi internal diatur teratur: Kasir toko pemohon menyusun formulir transfer di sistem dengan menentukan cabang tujuan dan volume kuantitas. Dokumen wajib lolos verifikasi digital (Transfer Approval) oleh Owner sebelum logistik dijalankan. Saat barang diberangkatkan (Dispatch), stok toko asal langsung dipotong sistem dan kuantitasnya dipindahkan sementara ke lokasi virtual In-Transit Inventory. Begitu barang mendarat di toko tujuan, kasir penerima memverifikasi kuantitas muatan riil; jika terdeteksi adanya susut rusak atau kehilangan di perjalanan, sistem mengisolasinya ke status Damaged atau Lost (masuk jurnal beban kerugian), lalu sisa beras yang utuh dimasukkan ke stok Available cabang tujuan.
+9.2 Stock Adjustment (Koreksi Penyesuaian Saldo Stok)
+Modul regulasi koreksi stok terbagi atas Positive Adjustment (penambahan saldo stok akibat adanya temuan barang tercecer) dan Negative Adjustment (pengurangan stok akibat penyusutan alami atau pencurian minor). Kebijakan otorisasi diatur bersyarat: penyesuaian bernilai kecil di bawah ambang batas toleransi (misal total nilai < Rp 100.000 atau < 1% volume stok) dapat dieksekusi langsung oleh kasir dengan syarat wajib mengetikkan alasan eksplisit. Penyesuaian bernilai besar di atas ambang batas otomatis tertahan dalam status Pending Approval dan memerlukan tanda tangan digital Owner agar stok terupdate resmi. Aksi ini direkam abadi pada Audit Log sistem.
+9.3 Stock Opname (Audit Penghitungan Fisik Stok Berkala)
+Prosedur pencocokan inventaris berkala wajib mengikuti alur baku sistem berikut:
+Snapshot: Sistem membekukan data saldo stok buku elektronik tepat pada saat tombol mulai opname ditekan Owner. Staf kasir diizinkan tetap melayani transaksi penjualan kasir agar tidak mengganggu operasional toko.
+Counting: Staf kasir menghitung fisik beras di gudang penyimpanan dan menginput data kuantitas riil secara bertahap ke dalam aplikasi tablet Android.
+Finalize & Variance Handling: Begitu kasir memfinalisasi hitungan, sistem otomatis mengomparasi hasil fisik vs data snapshot untuk menerbitkan dokumen Variance Report (Laporan Selisih). Selisih kurang/lebih otomatis disusun menjadi draf Stock Adjustment raksasa yang wajib diaudit dan disetujui manual oleh Owner.
+9.4 Damaged Inventory (Karantina & Pemusnahan Barang Cacat)
+Beras yang terkontaminasi kutu/hama, basah, atau bocor karung ditransfer secara sistem dari stok Available menuju area virtual Damaged Inventory dengan melampirkan kategori alasan baku ("Terkontaminasi Hama", "Kemasan Rusak", "Tumpah/Bocor", "Lain-lain"). Secara periodik, Owner meninjau daftar barang cacat ini untuk dieksekusi menjadi status Write-Off (Dibuang penuh dan nilainya dicatat sebagai kerugian operasional berjalan) atau Sell at Discount (Dipindahkan ke SKU cuci gudang untuk dijual murah).
+10. SALES MANAGEMENT (OPERASIONAL TRANSAKSI KASIR / POS)
+10.1 POS Transaction (Mekanisme Antarmuka Kasir)
+Aplikasi Android kasir menyediakan fitur pencarian katalog produk yang fleksibel demi memangkas antrian belanja konsumen:
+Grid Tampilan: Menu grid visual berbasis ikon gambar produk yang terbagi rapi per kategori menu.
+Pencarian Teks: Kolom input pencarian instan berdasarkan SKU atau teks nama produk secara real-time.
+Barcode Scanner: Konektivitas pemindai kode batang untuk menambah item otomatis ke keranjang belanja digital.
+Aturan Penetapan Harga: Harga produk ditarik mutlak dari database terpusat server. Kasir dilarang keras mengubah harga dasar komersial produk di level item transaksi. Kebijakan pemberian potongan harga diatur sistem secara terpusat; kasir hanya diperbolehkan mengklik opsi diskon per item atau diskon per transaksi dengan nominal/persentase yang sebelumnya dikunci oleh Owner.
+10.2 Weighted Product Sales (Transaksi Beras Eceran Timbangan)
+Untuk transaksi komoditas beras curah yang dijual berdasarkan timbangan pecahan (satuan Kg atau Liter), sistem otomatis memicu pop-up isian angka timbangan riil lapangan sesaat setelah produk diklik kasir (contoh diinput angka 2.5). Kalkulasi harga akhir diselesaikan instan oleh sistem komputer melalui rumus: Nilai Total Transaksi = Berat/Volume Aktual × Harga per Satuan Dasar (Kg/Liter).
+10.3 Multi Payment (Kombinasi Opsi Metode Pembayaran)
+Sistem kasir POS mendukung beragam metode pembayaran moderen: Cash (Tunai) dengan kalkulator kembalian otomatis, QRIS (menampilkan generator kode QR dinamis/statis nasional), Transfer Bank (via pengecekan mutasi rekening manual), dan Kartu Debit EDC. Sistem mengakomodasi skenario kombinasi hingga maksimal 3 metode pembayaran berbeda dalam satu transaksi struk belanja tunggal (misal: nota belanja Rp 100.000 dibayar tunai Rp 50.000 dan sisa Rp 50.000 via scan QRIS).
+10.4 Receipt Management (Manajemen Penerbitan Struk Belanja)
+Struk belanja fisik dicetak instan via thermal printer (printer yang menggunakan panas untuk mencetak pada kertas khusus tanpa tinta) sesaat setelah status transaksi dinyatakan lunas oleh database. Kebijakan cetak ulang (Reprint Rules) dikunci sistem: kasir cabang hanya diberikan hak cetak ulang untuk nomor nota transaksi terakhir yang sukses diproses. Akses pencarian dan cetak ulang berkas transaksi lama di masa lalu didelegasikan penuh kepada peran Owner via web manajemen pusat.
+10.5 Void Transaction (Pembatalan Transaksi Kasir)
+Sebelum uang diterima, kasir dibebaskan menghapus baris item belanja. Namun, aksi pembatalan nota transaksi lunas (Void) dinilai sebagai aktivitas sensitif berisiko tinggi. Staf kasir hanya berwenang menekan tombol ajukan permohonan void dengan memilih opsi alasan riil (contoh: "Salah input data"). Transaksi tidak akan dianulir sistem dan kuantitas persediaan tidak akan bergeser kembali sebelum permohonan tersebut disetujui digital oleh Owner dari dashboard pusat.
+10.6 Return & Refund (Retur Barang & Pengembalian Dana Konsumen)
+Prosedur retur komoditas diakomodasi dalam tenggat maksimal 1×24 jam pasca pembelian dengan syarat melampirkan struk belanja asli. Kasir memindai kode barcode struk untuk memuat riwayat data asli di tablet, lalu memilih skema Refund (Dana Kembali) atau Exchange (Tukar Tambah). Regulasi Keuangan: Seluruh pelunasan pengembalian dana konsumen wajib diserahkan dalam bentuk uang tunai (meskipun transaksi awal nontunai) dan dibukukan sebagai biaya pengeluaran laci kas (Cash Out). Kasir wajib menentukan status fisik beras retur: jika berstatus "Layak Jual", stok otomatis masuk kembali ke Available, dan jika berstatus "Rusak", otomatis dialokasikan ke lokasi Damaged Inventory.
+11. CASH MANAGEMENT (MANAJEMEN ARUS KAS HARIAN TOKO)
+11.1 Cash Drawer (Manajemen Saldo Laci Kasir)
+Di awal waktu pergantian shift kerja, staf kasir wajib menjalankan fitur "Buka Kas" di tablet dengan memasukkan jumlah nominal dana modal awal kas kecil (petty cash) yang diambil dari Kas Besar brankas toko. Di penghujung jam shift, kasir menutup hari dengan memproses fitur "Tutup Kas" untuk membukukan aktivitas serah terima seluruh uang tunai hasil transaksi kembali ke Kas Besar brankas utama.
+11.2 Cash Reconciliation (Prosedur Rekonsiliasi Kas Toko)
+Saat proses penutupan kasir dijalankan, sistem secara terkomputerisasi memetakan angka Expected Cash (saldo saldo uang tunai teoritis yang wajib ada di laci kasir) menggunakan rumus standar akuntansi: Expected Cash = Saldo Modal Awal + Total Penjualan Tunai - Total Pengeluaran Dana Retur Tunai - Total Pengeluaran Operasional Kecil. Staf menghitung manual fisik uang riil di laci kasir dan menginput angkanya sebagai Actual Cash. Apabila dijumpai adanya selisih (baik minus maupun plus), kasir wajib mengetikkan catatan alasan lapangan. Selisih kas besar melampaui limit toleransi (default diatur > Rp 50.000) otomatis memicu penandaan khusus (flagged) pada laporan agar segera diinvestigasi oleh Owner.
+11.3 Store Operational Expenses (Pencatatan Biaya Kecil Toko)
+Kasir diberikan wewenang mencatat pengeluaran uang kas tunai kecil langsung dari laci kasir demi membiayai kebutuhan tak terduga cabang berdasarkan kategori pengeluaran baku ("Listrik & Air", "Retribusi Keamanan", "Pembelian ATK", "Lain-lain"). Pengeluaran kas bernilai besar melampaui parameter batasan (default baku > Rp 200.000) diwajibkan mengantongi persetujuan lisan/tertulis Owner terlebih dahulu sebelum diinput ke dalam aplikasi tablet.
+12. FINANCIAL MANAGEMENT (MANAJEMEN KEUANGAN PERUSAHAAN)
+12.1 Cost Management (Manajemen Akumulasi Biaya)
+Sistem mengelompokkan struktur biaya usaha secara modular. Biaya Bahan Baku dikalkulasi berkelanjutan memanfaatkan taksiran Moving Average Cost persediaan gudang. Biaya Material Kemasan dialokasikan proporsional memotong nilai aset pembungkus dan dikonversi menjadi komponen penambah nilai HPP barang jadi saat proses produksi repacking/mixing dijalankan. Biaya Ekspedisi Pengiriman dan Biaya Operasional Toko dikelompokkan sebagai beban pengeluaran berjalan yang akan mengurangi nilai laba bersih operasional.
+12.2 Profit Calculation (Aturan Formula Laba Keuntungan)
+Gross Profit (Laba Kotor): Dihitung real-time pada setiap baris nota transaksi kasir melalui rumusan standar bisnis: Laba Kotor = Harga Jual Komersial - Nilai HPP Produk Jual (HPP yang terikat unik pada nomor batch produksi beras tersebut).
+Net Profit (Laba Bersih Perusahaan): Menggambarkan nilai laba bersih usaha riil dengan rumusan: Laba Bersih = Total Nilai Gross Profit Kumulatif - Total Beban Biaya Operasional Cabang selama batasan waktu kalender tertentu.
+Modul pelaporan keuangan menyediakan filter fleksibel untuk memecah data keuntungan per cabang (Store Profit) maupun performa keuntungan per kode produk (Product Profit).
+12.3 Cash Flow (Pemantauan Arus Arus Kas)
+Penyusunan berkas laporan perputaran likuiditas keuangan. Cash In (Arus Kas Masuk) mengkonsolidasikan pendapatan Penjualan Tunai retail serta serah terima dana modal awal laci. Cash Out (Arus Kas Keluar) mendokumentasikan transaksi pelunasan tagihan invoice supplier pengusaha pemasok, pengeluaran biaya operasional toko, penyerahan uang retur kasir, serta setoran harian kas besar brankas utama. Seluruh data disajikan utuh dalam modul Store Cash Flow Report.
+13. REPORTING (MODUL ENGINE PELAPORAN BISNIS)
+Seluruh modul pelaporan dalam aplikasi wajib dibekali fungsi filter rentang penanggalan kalender, filter parameter spesifik berdasarkan cabang toko/item produk/mitra pengusaha pemasok, opsi pengurutan data kolom (sorting), serta kemampuan konversi ekspor file instan menuju format dokumen Excel (.xlsx) secara rapi dan profesional.
+13.1 Sales Reports (Laporan Analisis Penjualan)
+Menyediakan berkas Laporan Penjualan Rangkuman (visualisasi omzet kotor, total struk nota belanja, nominal nilai transaksi rata-rata belanja), Laporan Penjualan Detail (rincian per nomor nota belanja lengkap beserta klasifikasi metode pembayaran kasir), Laporan Penjualan per Produk (volume performa pergerakan produk terjual per kode SKU), serta Laporan Tren Transaksi per Jam guna memetakan statistik waktu padat pengunjung di cabang retail.
+13.2 Inventory Reports (Laporan Manajemen Inventaris Stok)
+Mencakup Laporan Posisi Stok (Stock Position sisa kuantitas akhir seluruh item), Laporan Gerakan Stok (Inventory Ledger/Stock Card yang menyajikan sejarah urutan riwayat mutasi masuk-keluar per item barang), Laporan Valuasi Inventaris (akumulasi total nilai aset Rupiah berbasis rumus stok akhir dikali HPP rata-rata berjalan), serta Laporan Stok Kritis (Low Stock Report) untuk memberikan sinyal alarm belanja ke supplier.
+13.3 Purchasing Reports (Laporan Pengadaan & Hutang Dagang)
+Menampilkan berkas Laporan Riwayat Pembelian PO, Laporan Kinerja Pengusaha Pemasok (analisis performa ketepatan pengiriman dan stabilitas harga supplier), serta Laporan Hutang Dagang (Accounts Payable) yang merinci daftar invoice tagihan eksternal vendor yang belum lunas lengkap disertai parameter penanggalan batas jatuh temponya.
+13.4 Production Reports (Laporan Hasil Manufaktur Ringan)
+Menyajikan dokumen Laporan Riwayat Mixing dan Riwayat Repacking toko. Terintegrasi fitur premium Batch Traceability (Pelacakan Jejak Kelompok Produksi): Owner dapat memasukkan satu nomor kode batch produk jual jadi ke sistem, dan aplikasi otomatis melacak sejarahnya mulai dari resep versi berapa yang dipakai, kapan diolah, di cabang mana, menghabiskan bahan baku dari batch PO supplier mana, hingga nama identitas pemasok asalnya.
+13.5 Financial Reports (Laporan Konsolidasi Keuangan)
+Menyajikan draf dokumen Laporan Laba Rugi (Profit & Loss Statement), Laporan Arus Kas (Cash Flow Statement), serta Laporan Rincian Biaya Pengeluaran Operasional (Expense Report) yang dapat disajikan per toko maupun konsolidasi grup retail.
+14. OWNER DASHBOARD (PANEL VISUAL UTAMA OWNER)
+14.1 KPI Overview (Widget Indikator Performa Utama)
+Halaman beranda aplikasi web terpusat Owner menampilkan visualisasi data KPI (Key Performance Indicator / Indikator Kinerja Utama) dalam bentuk kartu widget ringkas: Total Omzet Penjualan (Harian/Bulanan), Total Perolehan Laba Kotor, Kuantitas Nota Transaksi Berjalan, Total Nilai Valuasi Aset Inventaris Saat Ini, serta parameter tingkat kesehatan operasional toko cabang.
+14.2 Alert Center (Pusat Pusat Persetujuan & Kendali)
+Panel interaktif sentral untuk memproses tindakan krusial. Mengintegrasikan kolom Approval Requests (Daftar persetujuan pembatalan transaksi void kasir, permohonan koreksi stok besar, dan verifikasi transfer barang antar cabang) serta kolom Critical Alerts (alarm peringatan stok kritis di bawah parameter minimum dan indikasi selisih kas laci kasir).
+14.3 Store Comparison (Grafik Komparatif Cabang Retail)
+Sajian data komparatif dalam wujud tabel analitik dan grafik batang dinamis untuk menyandingkan performa bisnis (metrik total omzet harian, capaian profitabilitas, volume kuantitas transaksi nota) antar ketiga cabang retail secara berdampingan (side-by-side).
+15. OFFLINE MODE (KAPABILITAS OPERASIONAL TANPA INTERNET)
+15.1 Offline Capability (Fungsi Mandiri Perangkat Kasir Android)
+Aplikasi kasir pada tablet Android dibekali ketangguhan khusus menghadapi pemutusan jaringan internet tak terduga di lokasi toko. Fitur yang didukung saat offline: Melayani pembuatan nota transaksi penjualan baru konsumen dan mencetak bukti struk fisik thermal. Fitur yang tidak didukung saat offline: Sinkronisasi data real-time, pengecekan posisi stok cabang lain, pemrosesan retur nota lama, serta seluruh transaksi modifikasi yang memerlukan otorisasi digital langsung dari server.
+15.2 Sync Mechanism (Alur Proses Sinkronisasi Otomatis)
+Begitu sinyal koneksi internet terdeteksi kembali oleh perangkat tablet Android, sistem otomatis memicu proses sinkronisasi di latar belakang (background sync). Kuantitas data penjualan yang tertunda selama masa offline akan diunggah bertahap menggunakan validasi token ID unik untuk menjamin tidak terjadinya duplikasi data transaksi pada database cloud pusat.
+15.3 Conflict Resolution (Resolusi Penyelarasan Konflik Data)
+Master Data (Produk & Katalog Harga): Bersandar pada metode penyeleksian konflik Server Wins. Data induk yang berada di server pusat dianggap sebagai kebenaran mutlak dan otomatis menimpa data master lokal yang usang pada memori tablet.
+Transaction Data (Nota Transaksi Kasir): Bersandar pada metode Append-Only. Seluruh data nota penjualan baru yang terekam saat offline akan ditambahkan sebagai antrian data baru ke database server tanpa mengubah atau menimpa records data penjualan yang sudah ada.
+16. AUDIT & SECURITY (PROTOKOL KEAMANAN & AUDIT SISTEM)
+16.1 Audit Log (Jejak Rekam Aktivitas Keamanan)
+Sistem mengelola mesin perekam Audit Log khusus yang dilindungi sistem proteksi tamper-proof (sistem proteksi yang mencegah manipulasi, penyuntingan, atau penghapusan log secara ilegal). Sistem merekam tanpa celah data mengenai: Aktivitas Akun Pengguna (login/logout, modifikasi sandi), Aktivitas Inventaris Stok (pembuatan nomor batch produksi, eksekusi mutasi transfer barang, input koreksi penyesuaian stok, penghapusan write-off aset rusak), serta Aktivitas Keuangan Kritis (peretasan/perubahan harga master komersial, otorisasi transaksi void pasca bayar, pelunasan refund tunai kasir).
+16.2 Security Rules (Kebijakan Keamanan Siber Sistem)
+Pembatasan operasional menu dikunci ketat berbasis protokol RBAC (Role-Based Access Control / Pengaturan hak akses berdasarkan peran pengguna). Seluruh lalu lintas transmisi data internet diproteksi enkripsi komprehensif HTTPS/SSL/TLS guna menangkal intersepsi pihak ketiga. Penyimpanan data password pengguna di database dilindungi algoritma kriptografi canggih melalui penambahan pengondisian hash dan salt guna menjamin perlindungan tertinggi dari risiko kebocoran data siber.
+17. NOTIFICATION & ALERT (ATURAN ALARM & PEMBERITAHUAN)
+Sistem menyalurkan pemberitahuan instan ke panel pusat notifikasi dashboard Owner saat mendeteksi kriteria operasional khusus: Kuantitas persediaan menyentuh batas kritis minimal (Inventory Alert), Frekuensi pembatalan nota transaksi void kasir cabang melewati parameter wajar harian (Sales Alert), Adanya selisih rekon kasir di luar limit wajar serta invoice supplier mendekati jatuh tempo (Financial Alert), dan adanya dokumen transfer/koreksi stok baru yang mengantre persetujuan Owner (Operational Alert).
+18. SYSTEM CONFIGURATION (KONFIGURASI PARAMETER BISNIS)
+Halaman setelan internal pada aplikasi web Owner memfasilitasi konfigurasi fleksibel atas variabel bisnis: Pengelolaan profil identitas toko dan jam operasional aktif (Store Configuration), Penentuan level stok minimum per SKU produk, parameter toleransi persentase susut resep resep, dan toleransi selisih stock opname (Inventory Configuration), serta pengaturan parameter sensitivitas alarm pembatalan void kasir dan selisih kas laci kasir (Alert Configuration).
+19. FUTURE ROADMAP (PETA RENCANA STRATEGIS EXPANSI SISTEM)
+19.1 Warehouse Management (Fase 2): Integrasi modul arsitektur khusus Gudang Pusat terpisah beserta alur manajemen logistik pasokan supplier skala besar.
+19.2 Distribution Management (Fase 2.1): Pengelolaan armada logistik internal dan pelacakan dokumen transfer internal distribusi stok dari Gudang Pusat ke Toko Cabang retail.
+19.3 WhatsApp Integration (Fase 3): Implementasi konektivitas API WhatsApp bisnis untuk pengiriman ringkasan omzet harian langsung ke ponsel Owner.
+19.4 E-Commerce Integration (Fase 3): Penyediaan gerbang API terbuka untuk sinkronisasi inventaris dengan toko marketplace online (Sistem penjualan terintegrasi Omnichannel).
+19.5 Mobile Owner App (Fase 4): Rekayasa aplikasi mobile native Android/iOS khusus untuk kenyamanan pemantauan bisnis praktis Owner via smartphone.
+20. APPENDIX (LAMPIRAN TEKNIS DOKUMEN)
+Sebagai penunjang pemahaman arsitektur rekayasa sistem, lampiran ini merangkum variabel operasional berikut:
+20.1 Business Rules Summary: Konsolidasi aturan baku seperti limitasi 3 multi-payment, restriksi modifikasi harga kasir, dan penahanan approval susut produksi.
+20.2 Formula Definitions: Detail matematis komputasi rumusan HPP Moving Average serta perhitungan indikator kesehatan performa cabang bisnis.
+20.3 Status Definitions Table: Kamus panduan penjelasan status operasional dokumen PO, dokumen Transfer internal cabang, serta dokumen tagihan Supplier Invoice Pemasok.
+20.4 Technical Glossary: Glosarium istilah data master: Raw Material (Bahan baku murni), Selling Product (Produk SKU komersial), Recipe (Blueprint formula), dan Batch Number (Kode lacak kelompok produksi).
+20.5 Assumptions & Open Questions: Inventarisasi asumsi teknis infrastruktur perangkat keras tablet Android lokal serta daftar pertanyaan terbuka terkait rencana penambahan modul akuntansi (accounting ledger) secara penuh di masa mendatang.
+20.6 Change Log: Lembar riwayat dokumentasi log audit atas modifikasi dokumen PRD versi 4.0 final ini.
+
+TECHNICAL BLUEPRINT
+Sistem Manajemen Kasir & Inventaris BerasPlus POS
+1. EXECUTIVE SUMMARY (RINGKASAN EKSEKUTIF)
+Dokumen ini adalah Blueprint Teknis (kerangka acuan teknis) final untuk pengembangan sistem "BerasPlus POS", sebuah platform manajemen kasir, inventaris, dan operasional yang dirancang khusus untuk bisnis retail (eceran) beras multi-toko dengan elemen manufaktur ringan seperti mixing (pencampuran) dan repacking (pengemasan ulang).
+Dokumen ini menerjemahkan persyaratan bisnis dari Product Requirements Document (PRD) versi 4.0 menjadi alur proses, alur pengguna, diagram status perjalanan proses, prinsip arsitektur, dan strategi implementasi yang terstruktur. Tujuannya adalah untuk menyediakan panduan yang jelas dan detail bagi tim teknis (arsitek, desainer database, dan developer / pengembang sistem) dalam merancang arsitektur sistem, skema database berupa ERD (Entity-Relationship Diagram / Diagram relasi entitas basis data), spesifikasi API (Application Programming Interface / Antarmuka penghubung antar sistem), dan pengembangan aplikasi (Web Dashboard & Android POS). Dokumen ini menjadi sumber kebenaran tunggal untuk fase pengembangan.
+2. BUSINESS PROCESS FLOW (ALUR PROSES BISNIS)
+Berikut adalah rincian alur proses untuk setiap modul utama yang ada di dalam sistem.
+2.1 Purchasing Flow (Alur Pengadaan Barang)
+Tujuan: Mengelola seluruh siklus pengadaan bahan baku dari supplier (pemasok), mulai dari permintaan internal hingga pembayaran lunas.
+Aktor: Purchasing (Bagian Pembelian), Owner (Pemilik), Kasir (sebagai penerima barang), Supplier (eksternal).
+Pemicu (Trigger): Stok bahan baku mencapai level minimum atau adanya kebutuhan strategis dari Owner.
+Langkah-langkah Proses:
+(Opsional/Fase 2) Purchase Request: Kasir membuat draf permintaan isi ulang stok internal saat stok menipis.
+Purchase Order (PO) Creation: Staf Purchasing/Owner membuat Purchase Order (Pesanan Pembelian) baru. Status PO: Draft (Konsep).
+PO Submission: Owner/Purchasing memfinalisasi dan mengirimkan PO. Status PO berubah menjadi Submitted (Terkirim). Kuantitas item dicatat sebagai On Order (Dalam Pesanan).
+Goods Receiving: Supplier mengirim barang. Staf Kasir memulai proses penerimaan fisik.
+Input & Validation: Kasir diwajibkan menginput kuantitas fisik dan harga beli per unit. Harga beli tidak boleh nol.
+Receiving Confirmation (Konfirmasi Penerimaan):
+Partial/Full Receiving: Stok riil bertambah sesuai yang diterima. Status PO menjadi Partially Received (Diterima Sebagian) atau Fully Received (Diterima Penuh).
+Over Receiving (Penerimaan Berlebih): Memerlukan override (otorisasi khusus/persetujuan) dari Owner.
+Supplier Invoice Recording: Staf Purchasing mencatat nota tagihan (invoice) dari supplier. Status tagihan: Unpaid (Belum Dibayar).
+Supplier Payment: Bagian Keuangan/Owner melakukan pembayaran. Status tagihan: Paid (Lunas).
+PO Closure: Ketika PO berstatus Fully Received dan tagihan terkait Paid, sistem otomatis mengubah status PO menjadi Closed (Selesai).
+Validasi Kunci: Setiap penerimaan wajib mencatat harga beli yang valid. Perubahan harga beli pasca-penerimaan memerlukan otorisasi Owner dan dicatat dalam Audit Log (Catatan riwayat sistem).
+2.2 Mixing & Repacking Flow (Alur Pencampuran & Pengemasan Ulang)
+Tujuan: Mengolah bahan baku menjadi produk jadi SKU (Stock Keeping Unit / Satuan Barang Terkecil) sambil melacak biaya dan kuantitas secara akurat.
+Aktor: Kasir / Staf Produksi Toko.
+Pemicu: Staf memulai proses produksi di aplikasi kasir.
+Langkah-langkah Proses:
+Pemilihan Formula/Resep: Staf memilih resep (untuk pencampuran) atau produk sumber & tujuan (untuk pengemasan ulang).
+Validasi Stok: Sistem memeriksa ketersediaan semua bahan input (bahan baku, bahan kemasan). Proses diblokir jika stok kurang.
+Proses Fisik & Input Hasil: Staf melakukan proses fisik dan menginput kuantitas output secara aktual.
+Validasi Susut (Loss): Khusus pencampuran, sistem memvalidasi nilai susut terhadap batas Standard Loss (Susut Standar). Jika melebihi batas, data (batch) memerlukan persetujuan Owner.
+Batch Creation & Posting: Sistem menerbitkan Nomor Batch Produksi unik dan secara instan mengurangi stok bahan input serta menambah stok produk output.
+HPP Calculation: HPP (Harga Pokok Penjualan) untuk batch baru dihitung otomatis dengan formula: Total Nilai HPP Bahan Baku Terpakai + Total Nilai Biaya Kemasan Terpakai.
+2.3 Inventory Transfer Flow (Alur Mutasi Stok Antar Cabang)
+Tujuan: Mengelola perpindahan stok antar lokasi (cabang) secara terkontrol.
+Aktor: Kasir (pemohon & penerima), Owner (pemberi persetujuan).
+Pemicu: Kasir membuat permintaan transfer barang.
+Langkah-langkah Proses:
+Request: Kasir membuat permintaan. Status: Requested (Diminta).
+Approval: Owner menyetujui permintaan. Status: Approved (Disetujui).
+Dispatch: Kasir pengirim mengirim barang fisik. Data stok dipindahkan sementara ke In-Transit Inventory (Stok Dalam Perjalanan). Status: In Transit.
+Receive: Kasir penerima memverifikasi fisik dan menerima barang di sistem. Stok dipindahkan ke status Available (Tersedia) di cabang tujuan. Status: Completed (Selesai).
+2.4 Stock Opname Flow (Alur Audit Stok Fisik)
+Tujuan: Mencocokkan data stok di sistem dengan jumlah fisik stok secara nyata.
+Aktor: Owner, Kasir.
+Pemicu: Owner menginisiasi jadwal stock opname (penghitungan stok berkala).
+Langkah-langkah Proses:
+Snapshot: Owner memulai opname. Sistem melakukan snapshot ("memfoto" atau menangkap) data saldo stok secara instan. Transaksi penjualan di toko tetap bisa berjalan.
+Counting: Staf Kasir menghitung dan menginput stok fisik.
+Variance Calculation: Sistem membandingkan hasil hitung fisik dengan snapshot sistem untuk menghasilkan Variance Report (Laporan Selisih).
+Adjustment Approval: Selisih dibuat menjadi draf Stock Adjustment (Penyesuaian Stok) yang wajib disetujui Owner.
+Inventory Update: Setelah disetujui, sistem otomatis memperbarui saldo stok akhir.
+2.5 POS Sales & Return Flow (Alur Penjualan Kasir & Retur Barang)
+Tujuan: Melayani transaksi penjualan dan pengembalian barang konsumen dengan cepat dan akurat.
+Langkah Penjualan: Kasir menambahkan item ke keranjang -> Sistem meminta input berat (untuk produk timbangan) -> Kasir memproses pembayaran tunggal/kombinasi -> Struk tercetak, stok terpotong, data finansial tersimpan.
+Langkah Retur: Kasir memindai struk belanja (wajib di bawah 24 jam) -> Kasir menentukan status kelayakan barang (Layak Jual/Rusak) -> Stok dikembalikan ke sistem -> Dana konsumen dikembalikan secara tunai.
+Pengecualian: Void Transaction (Pembatalan transaksi yang sudah lunas) harus melalui mekanisme persetujuan Owner.
+2.6 Offline Mode & Synchronization Flow (Mode Tanpa Internet & Sinkronisasi Data)
+Saat Offline (Tidak Ada Internet): Aplikasi kasir mendeteksi putusnya koneksi dan otomatis menyimpan seluruh transaksi baru secara lokal di database tablet (misalnya menggunakan SQLite). Fitur yang butuh koneksi langsung seperti otorisasi Owner akan dinonaktifkan sementara.
+Saat Online (Koneksi Pulih): Sistem melakukan sinkronisasi latar belakang (background sync). Antrean transaksi diunggah satu per satu ke server menggunakan token unik untuk mencegah duplikasi.
+Resolusi Konflik Data:
+Data Transaksional: Menggunakan metode Append-Only (hanya menambahkan). Semua transaksi saat offline ditambahkan sebagai data baru.
+Data Master (Harga & Produk): Menggunakan metode Server Wins (Server Menang). Data terbaru di server pusat selalu menjadi acuan mutlak yang akan menimpa data usang di tablet kasir.
+3. USER FLOW (ALUR KERJA PENGGUNA)
+
+Peran
+Deskripsi Tugas & Akses
+ 
+Owner (Pemilik)
+Tujuan: Memantau kesehatan bisnis, membuat keputusan strategis, dan mengontrol otorisasi.
+Akses: Web Dashboard (semua modul, pengaturan, dan laporan).
+Aktivitas: Memantau KPI (Key Performance Indicator / Indikator Kinerja Utama), mengecek peringatan sistem, menyetujui pembatalan/penyesuaian stok, mengubah harga, menganalisis laporan Laba Rugi, dan mengelola master data (data utama). Mampu melakukan fungsi CRUD (Create, Read, Update, Delete / Buat, Baca, Ubah, Hapus) pada seluruh sistem.
+Kasir
+Tujuan: Melayani transaksi pelanggan, mengelola operasional toko harian, dan mencatat mutasi barang.
+Akses: Aplikasi Tablet Android (Modul POS Kasir, Penerimaan Barang, Produksi, Kas Harian).
+Aktivitas: Membuka dan menutup laci kas (modal awal & setor akhir), melayani transaksi & retur, memproses pencampuran/pengemasan ulang beras, dan mencatat biaya pengeluaran operasional toko.
+Purchasing (Pembelian)
+Tujuan: Mengelola kelancaran pasokan barang dari supplier.
+Akses: Web Dashboard (Modul Pembelian, Supplier, Laporan terkait).
+Aktivitas: Memantau batas minimal stok, membuat draf PO, mengirim pesanan ke supplier, mencatat faktur (invoice) tagihan masuk, dan memastikan ketepatan jatuh tempo pembayaran utang dagang.
+Warehouse (Gudang Pusat) - Masa Depan
+Tujuan: Manajemen logistik terpusat dan produksi skala besar.
+Akses: Modul Penerimaan Massal, Mutasi Antar Cabang, dan Damaged Inventory (Stok Rusak).
+Aktivitas: Penerimaan barang dari supplier, produksi massal, dan distribusi logistik pasokan ke seluruh cabang toko eceran.
+
+4. STATE DIAGRAM (DIAGRAM STATUS PERJALANAN PROSES)
+Penjelasan urutan status (state) untuk dokumen dan entitas kunci di dalam sistem:
+Purchase Order (Pesanan Pembelian):
+Draft (Konsep) → Submitted (Terkirim ke Supplier) → Partially Received (Diterima Sebagian) atau Fully Received (Diterima Penuh) → Closed (Selesai / Lunas). Bisa juga berstatus Cancelled (Dibatalkan) jika dibatalkan sebelum barang tiba.
+Inventory Transfer (Mutasi Stok):
+Requested (Diminta oleh toko) → Approved (Disetujui Owner) → In Transit (Dalam Perjalanan Ekspedisi) → Completed (Diterima utuh) atau Partially Received (Jika terdapat barang rusak/kurang di jalan).
+Stock Opname (Audit Fisik):
+Draft (Jadwal Direncanakan) → Counting (Proses Penghitungan) → Variance Review (Pengecekan Selisih) → Adjustment Pending (Menunggu Persetujuan Penyesuaian) → Completed (Selesai).
+Sales Transaction (Transaksi Kasir):
+Draft (Proses input item) → Pending Payment (Menunggu Pembayaran) → Paid (Lunas Terbayar) → Completed (Struk Tercetak). Dapat berstatus Voided (Dibatalkan) atas izin Owner, atau Refunded (Uang Dikembalikan) pada saat retur.
+5. KEY ARCHITECTURAL & DESIGN PRINCIPLES (PRINSIP UTAMA ARSITEKTUR & DESAIN)
+Keputusan teknis fundamental yang harus diikuti secara ketat oleh tim developer:
+Arsitektur Multi-Lokasi Skalabel (Dapat Diperluas): Database tabel lokasi harus memiliki klasifikasi tipe data ENUM (tipe data dengan pilihan tetap) berupa "STORE" (Toko) dan "WAREHOUSE" (Gudang). Hal ini memastikan sistem siap diekspansi untuk fitur gudang pusat tanpa perlu melakukan refactoring (perombakan struktur kode) berskala besar.
+Master Data Fleksibel (Konversi Satuan): Atribut rasio konversi antara Kilogram (Kg) dan Liter diletakkan pada level pengaturan master produk (tabel Produk dapat bersifat nullable atau diperbolehkan kosong jika tidak relevan). Ini memberikan keluwesan perhitungan massa jenis beras yang berbeda-beda.
+Robust Offline-First Architecture (Arsitektur Andalan Mode Luring): Aplikasi Android wajib dibangun dengan arsitektur offline-first. Penggunaan database perangkat lokal seperti SQLite (dengan menggunakan library Room) dan mekanisme antrean (queue) sinkronisasi data harus kuat agar aplikasi tidak terhambat meski koneksi internet putus.
+Immutable Ledger & Auditing (Pembukuan Mutlak & Jejak Rekam): Seluruh tindakan yang memengaruhi inventaris stok harus dimasukkan ke tabel InventoryLedger yang bersifat immutable (data paten yang tidak boleh dihapus atau diubah). Setiap persetujuan atau perubahan harga dari Owner wajib direkam penuh dalam tabel Audit Log untuk keamanan tingkat tinggi.
+6. IMPLEMENTATION & DEPLOYMENT STRATEGY (STRATEGI IMPLEMENTASI & PELUNCURAN)
+Langkah strategis yang harus disiapkan tim sebelum dan pada saat sistem dirilis (go-live):
+Rencana Migrasi Data (Data Migration Plan):
+Menyusun template spreadsheet (format tabel standar Google Sheets/Excel) guna pengumpulan data awal.
+Mengembangkan naskah sistem khusus untuk melakukan proses impor data secara otomatis ke basis data.
+Wajib melakukan dua kali uji coba proses migrasi data di lingkungan staging (server pengujian sebelum rilis resmi) guna menghindari adanya data yang korup atau rusak formatnya.
+Rencana Pelatihan & Adopsi Pengguna (User Training & Adoption Plan):
+Mengadakan pelatihan tatap muka spesifik untuk Owner, Kasir, dan staf Pembelian.
+Membuat buku panduan (User Manual) digital yang berisi tangkapan layar (screenshot) visual yang mudah dimengerti.
+Menyediakan tim Hypercare Support (dukungan pendampingan intensif pasca-rilis) selama 1-2 minggu pertama untuk mendampingi staf secara langsung di lapangan ketika menjumpai kesulitan pada tahap awal adopsi aplikasi.
+
+
+PHASE 2 — DATABASE DESIGN
+Sistem Manajemen Kasir & Inventaris BerasPlus POS
+Tujuan Fase Ini:
+Menerjemahkan seluruh kebutuhan bisnis dari PRD (Product Requirements Document) dan alur proses dari Technical Blueprint menjadi sebuah desain basis data (database) yang terstruktur, logis, dan siap untuk tahap implementasi pemrograman. Fase ini bertujuan untuk mendefinisikan secara detail entitas data (tabel), hubungan antar entitas (relasi), tipe data yang digunakan, serta aturan bisnis mutlak yang akan diterapkan dan dikunci di level sistem database.
+STEP 4 — ERD (ENTITY RELATIONSHIP DIAGRAM)
+ERD (Diagram Relasi Entitas) mendefinisikan semua "objek" data berupa tabel yang perlu disimpan secara permanen dalam sistem, sekaligus memetakan bagaimana setiap tabel tersebut saling terhubung satu sama lain.
+Daftar Tabel Utama (Estimasi 40-60 Tabel):
+Modul Inti & Pengguna (Core & User)
+stores: Menyimpan data profil semua cabang toko.
+users: Menyimpan data identitas semua pengguna (Owner, Kasir, staf lainnya).
+roles: Mendefinisikan peran hak akses (Owner, Kasir, Purchasing).
+user_roles: Tabel penghubung relasi antara users dan roles.
+user_stores: Menentukan lokasi penugasan spesifik kasir bekerja di toko cabang mana.
+settings: Menyimpan parameter konfigurasi global seluruh sistem.
+Modul Produk & Resep (Product & Recipe)
+raw_materials: Data master (induk) untuk bahan baku mentah yang dipasok (contoh: Beras IR64 50 Kg).
+packaging_materials: Data master untuk material kemasan pembungkus (contoh: Karung 5 Kg, Plastik Vakum).
+selling_products: Data master untuk produk jadi SKU (Stock Keeping Unit) yang siap dijual eceran ke konsumen.
+categories: Pengelompokan kategori komoditas produk (contoh: Beras Premium, Beras Medium).
+recipes: Informasi header (kepala dokumen) untuk resep/formula pencampuran beras.
+recipe_versions: Menyimpan riwayat versi-versi dari setiap modifikasi resep.
+recipe_version_inputs: Rincian bahan baku mentah yang dibutuhkan per takaran versi resep.
+recipe_version_packaging: Rincian material kemasan yang dibutuhkan per versi resep.
+Modul Pembelian (Purchasing)
+suppliers: Data master identitas semua pengusaha pemasok.
+purchase_orders: Data header dokumen PO (Purchase Order / Pesanan Pembelian).
+purchase_order_items: Rincian item komoditas bahan baku yang dipesan dalam satu dokumen PO.
+goods_receipts: Data header dokumen bukti penerimaan fisik barang di lokasi.
+goods_receipt_items: Rincian kuantitas aktual barang yang berhasil diterima dan dibongkar.
+supplier_invoices: Data header nota dokumen tagihan utang dari pihak pemasok.
+supplier_invoice_items: Rincian nilai item nominal dalam nota tagihan pemasok.
+supplier_payments: Jurnal pencatatan pembayaran pelunasan hutang dagang kepada pemasok.
+Modul Produksi (Mixing & Repacking)
+production_batches: Data header untuk setiap sesi aktivitas produksi manufaktur (baik pencampuran maupun pengemasan ulang).
+production_batch_inputs: Rincian bahan baku mentah atau beras curah yang benar-benar digunakan/dihabiskan dalam satu nomor batch.
+production_batch_packaging: Rincian kuantitas kemasan plastik pembungkus yang terpakai dalam satu batch.
+production_batch_outputs: Rincian kuantitas produk beras jadi yang berhasil dihasilkan dan masuk ke etalase dari satu batch.
+Modul Inventaris (Inventory) — Paling Krusial
+inventory_locations: Mendefinisikan seluruh titik lokasi penyimpanan fisik stok yang valid (contoh: Toko A, Toko B, Gudang Rusak, Area Dalam Perjalanan).
+inventory_balances: (Opsional / Calculated View - Tabel virtual) Representasi tampilan angka saldo stok riil terkini per produk di masing-masing lokasi.
+inventory_ledger: (Tabel Paling Penting Sistem) Buku jurnal raksasa immutable (tidak bisa diedit) yang mencatat mutlak SEMUA pergerakan arus stok tanpa terkecuali.
+stock_transfers: Data header dokumen mutasi pemindahan barang lintas lokasi cabang.
+stock_transfer_items: Rincian item barang beserta kuantitas yang sedang ditransfer antar cabang.
+stock_opnames: Data header sesi pelaksanaan stock opname (penghitungan audit stok fisik berkala).
+stock_opname_snapshots: Salinan data "foto" seluruh saldo stok sistem yang dibekukan tepat saat sesi opname dimulai.
+stock_opname_counts: Data input hasil hitungan fisik riil secara nyata yang dilaporkan oleh staf.
+stock_adjustments: Dokumen koreksi pencatatan penyesuaian (tambah/kurang) untuk merevisi saldo stok akibat selisih, temuan, atau penyusutan.
+Modul Penjualan & Kas (Sales & Cash)
+sales_transactions: Data header nota transaksi penyelesaian belanja kasir (invoice/struk).
+sales_transaction_items: Rincian keranjang produk yang dibeli konsumen dalam satu nota transaksi tunggal.
+sales_payments: Rincian metode pelunasan dalam satu transaksi (mengakomodasi skema pembayaran kombinasi atau multi-payment, misal sebagian tunai & sebagian QRIS).
+sales_returns: Dokumen pencatatan pengembalian dana dan retur penerimaan barang dari konsumen.
+cash_drawers: Mencatat lalu lintas status kas laci uang tunai mesin kasir (saldo modal awal, setoran lunas harian).
+cash_drawer_reconciliations: Dokumen laporan rekonsiliasi tutup buku perhitungan kas harian toko.
+store_expenses: Buku catatan pengeluaran beban biaya operasional harian berskala kecil di tingkat cabang.
+Modul Lainnya
+audit_logs: Rekaman otomatis yang mendokumentasikan semua jejak aktivitas penting, modifikasi krusial, dan otorisasi dari seluruh pengguna (tamper-proof).
+STEP 5 — DATA DICTIONARY (KAMUS DATA)
+Bagian ini memaparkan contoh rancangan arsitektur kolom spesifik (beserta tipe datanya) untuk tabel-tabel fundamental database.
+raw_materials (Tabel Bahan Baku)
+Field (Nama Kolom)
+Type (Tipe Data)
+Deskripsi Fungsi
+ 
+id
+UUID
+ID unik baris data (Primary Key).
+rm_code
+VARCHAR
+Kode singkat unik penanda bahan baku.
+name
+VARCHAR
+Nama jelas bahan baku (contoh: "Beras Pandan Wangi Cianjur 50 Kg").
+category_id
+UUID
+Relasi pengikat (Foreign Key) ke id tabel categories.
+base_unit
+ENUM
+Satuan berat terkecil basis data (dikunci permanen pada 'Kg').
+conversion_factor
+DECIMAL
+Angka pengali konversi dari unit grosir ke Kg dasar (contoh input: 50 untuk karung kapasitas 50Kg).
+supplier_id
+UUID
+Pemasok reguler utama untuk item ini (bersifat opsional).
+status
+ENUM
+Status penggunaan item: 'Active' (Aktif) atau 'Inactive' (Tidak Aktif).
+
+selling_products (Tabel Produk Jual Komersial)
+Field (Nama Kolom)
+Type (Tipe Data)
+Deskripsi Fungsi
+ 
+id
+UUID
+ID unik baris data (Primary Key).
+sku
+VARCHAR
+Kode SKU (Stock Keeping Unit) unik pelacak produk.
+name
+VARCHAR
+Nama representatif komersial (contoh: "Beras Premium Mix 5 Kg").
+category_id
+UUID
+Relasi pengikat ke id tabel categories.
+sell_price
+DECIMAL
+Harga komersial retail per satu satuan barang.
+hpp_average
+DECIMAL
+Nilai HPP (Harga Pokok Penjualan) riil yang dihitung otomatis secara rata-rata bergerak.
+min_stock_level
+DECIMAL
+Ambang batas ketersediaan stok kritis (berbasis satuan Kg).
+recipe_id
+UUID
+Kode relasi rujukan ke tabel resep manufaktur asal produk ini (bersifat opsional jika bukan hasil olahan).
+status
+ENUM
+Status etalase item: 'Active' (Aktif) atau 'Inactive' (Tidak Aktif).
+
+recipes (Tabel Header Resep Produksi)
+Field (Nama Kolom)
+Type (Tipe Data)
+Deskripsi Fungsi
+ 
+id
+UUID
+ID unik baris data (Primary Key).
+recipe_code
+VARCHAR
+Kode indeks unik identifikasi jenis resep.
+name
+VARCHAR
+Nama formula resep (contoh: "Resep Beras Premium Mix").
+target_product_id
+UUID
+Relasi ke tabel selling_products yang menentukan produk jual target apa yang akan dicetak dari adonan resep ini.
+standard_loss_pct
+DECIMAL
+Angka persentase batas maksimal susut wajar akibat debu/kotoran beras (contoh input: 1.5 untuk mematok 1.5%).
+active_version_id
+UUID
+Penunjuk ke ID versi resep mana yang saat ini sedang aktif atau disahkan untuk dieksekusi di lapangan.
+
+STEP 6 — INVENTORY LEDGER DESIGN (DESAIN JURNAL INVENTARIS)
+Modul ini adalah jantung atau inti pusat data dari keseluruhan arsitektur inventaris. Prinsip Utama: Sistem sama sekali dilarang melakukan perubahan modifikasi langsung terhadap angka mutlak di tabel saldo stok (Inventory Balances). Seluruh tampilan kalkulasi angka stok riil sepenuhnya harus diakumulasi dinamis dari jejak seluruh jurnal riwayat penambahan/pengurangan pergerakan stok yang terekam abadi di tabel buku besar (inventory_ledger).
+Struktur Tabel inventory_ledger
+Field (Nama Kolom)
+Type (Tipe Data)
+Deskripsi Fungsi
+ 
+id
+BIGSERIAL
+ID numerik sekuensial baris data (Primary Key).
+timestamp
+TIMESTAMPTZ
+Catatan stempel waktu dan zona waktu pasti ketika peristiwa fisik pergerakan arus barang tersebut tereksekusi.
+location_id
+UUID
+Kode lokasi persis di mana pergerakan stok terjadi (Toko A, Gudang Karantina Rusak, Dalam Perjalanan).
+product_type
+ENUM
+Identifikasi klasifikasi item: 'RAW_MATERIAL' (Bahan Mentah), 'PACKAGING' (Kemasan), 'SELLING_PRODUCT' (Barang Jadi).
+product_id
+UUID
+ID relasi dari objek produk yang jumlahnya bergeser.
+quantity_kg
+DECIMAL
+Nominal jumlah volume pergeseran terstandarisasi dalam unit Kg. Disimpan sebagai angka positif (+) untuk aliran masuk dan angka negatif (-) untuk aliran keluar.
+movement_type
+ENUM
+Kategori klasifikasi jenis aktivitas pergerakan (wajib merujuk pada daftar kode mutlak di bawah).
+reference_id
+UUID
+ID bukti relasi dokumen sumber (contoh: ID surat PO, ID nota Batch Produksi, ID struk transaksi penjualan kasir).
+hpp_at_time
+DECIMAL
+Menyimpan salinan arsip nilai Rupiah HPP produk pada detik peristiwa pergerakan itu dieksekusi agar kalkulasi laba masa lalu tidak terdampak fluktuasi harga masa depan.
+
+Daftar Validitas movement_type (Jenis Pergerakan Stok)
+PURCHASING (PENGADAAN):
+GOODS_RECEIPT (+ menambah Stok Bahan Baku berkat bongkar muat).
+PRODUCTION (PRODUKSI MIXING/REPACKING):
+PRODUCTION_INPUT_RAW (- menyusutkan Stok Bahan Baku).
+PRODUCTION_INPUT_PKG (- menyusutkan Stok Material Kemasan).
+PRODUCTION_OUTPUT (+ menambah Stok utuh Produk Jual siap edar).
+PRODUCTION_LOSS (- mendokumentasikan penyusutan sisa kotor debu/susut massa Bahan Baku).
+SALES & RETURN (PENJUALAN KASIR & RETUR):
+SALE (- memotong Stok Produk Jual yang laku dibeli).
+RETURN_GOOD (+ mengembalikan Produk Jual yang diretur ke rak karena Layak Jual).
+RETURN_DAMAGED (+ mengembalikan Produk Jual yang diretur ke lokasi khusus Gudang Rusak).
+TRANSFER (MUTASI CABANG):
+TRANSFER_OUT (- memotong paksa Stok dari cabang asal ekspedisi).
+TRANSFER_IN (+ mendaratkan Stok utuh di cabang penerima).
+ADJUSTMENT & OPNAME (KOREKSI AUDIT BERKALA):
+ADJUSTMENT_POSITIVE (+ koreksi penambahan saldo).
+ADJUSTMENT_NEGATIVE (- koreksi pemotongan saldo).
+DAMAGE (KERUSAKAN ASET):
+WRITE_OFF (- menghapus permanen catatan Stok dari lokasi Gudang Rusak saat aset dimusnahkan massal).
+Deliverable Akhir Phase 2 (Rangkuman Target Pencapaian Fase)
+Berdasarkan arsitektur dokumen teknis di atas, berikut adalah 5 pilar desain mutlak yang wajib direalisasikan secara sempurna sebelum masuk tahapan penulisan kode (coding) dimulai:
+ERD Lengkap: Penerbitan diagram final yang memvisualisasikan seluruh ~43 struktur tabel di atas secara akurat beserta relasi-relasinya (foreign key / kunci penghubung ke tabel lain).
+Data Dictionary (Kamus Data): Dokumen perincian detail spesifikasi teknis setiap kolom untuk seluruh entitas tabel database (mencakup rincian nama, tipe data, karakter wajib/opsional isi).
+Inventory Ledger Design: Cetak biru logis dari seluruh status pergerakan stok movement_type dan algoritma alur pembentukan catatan jurnal dari setiap proses operasi bisnis harian (pengadaan, produksi massal, dan penjualan ecer).
+Status Matrix (Matriks Diagram Status Dokumen):
+Purchase Order: Draft → Submitted → Partially Received / Fully Received → Closed. (Bisa beralih menjadi Cancelled).
+Inventory Transfer: Requested → Approved → In Transit → Completed.
+Stock Opname: Draft → Counting → Variance Review → Pending Adjustment → Completed.
+Sales Transaction: Draft → Pending Payment → Paid → Completed. (Bisa beralih menjadi Voided / Refunded).
+Database Business Rules (Aturan Eksekusi Bisnis Basis Data): Penerapan restriksi back-end mutlak di level sistem penyimpanan data guna menolak paksa masuknya data yang tak wajar. Parameter wajib mencakup:
+Pemblokiran paksa inisiasi nomor batch produksi jika sistem mendeteksi stok bahan baku tidak mencukupi standar formula resep.
+Pembatalan otomatis persetujuan mutasi transfer barang jika stok di etalase toko asal lebih rendah dari permintaan.
+Penahanan penerimaan barang saat dibongkar muat melebihi batas kuantitas PO, dan wajib menuntut override (otorisasi paksa) Owner.
+Nilai nominal harga beli barang dilarang keras diisi dengan angka "nol" saat proses penerimaan logistik.
+Sistem mewajibkan persetujuan digital Owner apabila kalkulasi angka persentase susut produksi jauh melampaui toleransi batas resep.
+Selisih laporan uang riil vs sistem (selisih kas harian) di atas batas toleransi wajib dilabeli sebagai berisiko tinggi (flagged) guna diproses secara khusus oleh Owner.
+
+
+FASE 3: API Design
+
+
+Tujuan Fase Ini: Mendefinisikan setiap tindakan bisnis (business action) yang dapat dilakukan oleh sistem ke dalam bentuk endpoint API (titik akses komunikasi spesifik pada server) yang terstruktur dengan matang. Desain teknis ini berfungsi sebagai kontrak formal bersama antara komponen frontend (sisi tampilan pengguna yang diwujudkan dalam bentuk aplikasi Flutter pada perangkat Tablet kasir) dan komponen backend (sisi server pengolah data utama menggunakan layanan Supabase). Dokumen ini menjamin seluruh tim pengembang memiliki pemahaman yang seragam mengenai struktur data masuk (input), proses validasi internal server, serta format keluaran data (output) yang dihasilkan, sehingga mentransformasikan seluruh alur logika bisnis menjadi deretan fungsi digital yang siap dieksekusi.
+Platform & Arsitektur Teknologi yang Direkomendasikan
+Backend & Database (Supabase): Solusi infrastruktur awan yang andal karena mengintegrasikan database relasional PostgreSQL yang tangguh, modul autentikasi keamanan, ruang penyimpanan berkas digital (storage), serta fungsi pemrograman tanpa server (Edge Functions) dalam satu kendali terpadu dengan efisiensi pengeluaran berbasis volume pemakaian riil (pay-as-you-go).
+Frontend Aplikasi Kasir Toko (Flutter): Kerangka kerja (framework) modern pilihan untuk memproduksi aplikasi kasir Android yang memiliki performa tinggi, responsif, dan nyaman dioperasikan lewat perangkat tablet.
+Frontend Dashboard Owner (Next.js / React): Framework web berbasis komponen yang sangat kokoh untuk menyajikan halaman ringkasan data eksekutif (dashboard) interaktif bagi pemilik bisnis dengan integrasi mulus ke ekosistem Supabase.
+Kompilasi Rancangan Desain API per Modul Sistem
+Berikut merupakan rincian arsitektur API terintegrasi yang dikembangkan berdasarkan dokumen Cetak Biru Teknis (Technical Blueprint) demi mendukung operasional bisnis yang efisien dan akurat:
+1. AUTH API (Manajemen Autentikasi & Keamanan Sesi)
+Tujuan Utama: Memvalidasi dan mengamankan kredensial hak akses pengguna, mengelola sesi login-logout, serta mengunci otorisasi perangkat dari risiko penyalahgunaan.
+Endpoint API
+Deskripsi & Aturan Operasional
+ 
+POST /auth/login
+Memproses verifikasi identitas akun pengguna (staf kasir pada aplikasi tablet maupun owner pada aplikasi dashboard web).
+POST /auth/logout
+Mengakhiri masa aktif sesi pengguna saat ini serta menghapus token autentikasi dari sistem demi menjaga keamanan.
+POST /auth/refresh
+Memperbarui masa berlaku token keamanan sesi digital (session token) secara berkala sebelum mencapai batas waktu kedaluwarsa.
+POST /auth/verify-pin
+Membuka kembali status kunci layar aplikasi kasir tablet secara cepat setelah sistem mendeteksi kondisi diam (idle) tanpa aktivitas.
+
+2. MASTER DATA API (Pengelolaan Data Induk Fondasi Sistem)
+Tujuan Utama: Menjadi pusat kendali konfigurasi data utama yang menjadi acuan dasar seluruh transaksi operasional perusahaan.
+Endpoint API
+Deskripsi & Aturan Operasional
+ 
+GET /raw-materials
+Menampilkan daftar inventaris seluruh jenis bahan baku mentah yang dimiliki perusahaan.
+POST /raw-materials
+Mendaftarkan jenis entitas atau item bahan baku mentah baru ke dalam database pusat.
+GET /selling-products
+Menarik katalog komoditas barang siap jual yang dikelompokkan berdasarkan kode SKU (Stock Keeping Unit / kode identitas produk unik).
+POST /selling-products
+Membuat variasi komoditas produk jual baru yang akan dipajang di etalase kasir.
+GET /recipes
+Memanggil daftar formula komposisi atau resep standar produksi komoditas di toko.
+POST /recipes
+Merekam racikan formula produksi baru sekaligus melacak nomor rilis versi resepnya.
+GET /suppliers
+Menampilkan profil daftar mitra pemasok (supplier) penyedia bahan komoditas usaha.
+GET /stores
+Menampilkan detail lokasi jaringan outlet toko fisik atau cabang ritel perusahaan.
+
+*Informasi Tambahan: Setiap entitas data induk di atas secara otomatis akan didukung oleh fungsi pembaruan (PUT) serta penonaktifan records data (DELETE).
+3. PURCHASING API (Siklus Pengadaan & Pembelanjaan Barang)
+Tujuan Utama: Memantau siklus pengadaan persediaan bahan baku mulai dari pengajuan pesanan hingga penuntasan kewajiban utang dagang kepada pemasok.
+Endpoint API
+Deskripsi & Aturan Operasional
+ 
+POST /purchase-orders
+Menyusun rancangan draf awal dokumen PO (Purchase Order / Surat Pesanan Pembelian).
+POST /purchase-orders/{id}/submit
+Mengesahkan dokumen pesanan pembelian dan merilis statusnya menjadi Submitted (Telah Dikirim ke Pemasok).
+POST /purchase-orders/{id}/receive-goods
+[Titik Aksi Utama] Mencatat tanda terima masuknya barang fisik dari pemasok. Pada fase ini saldo persediaan akan langsung bertambah dan mencatatkan mutasi GOODS_RECEIPT (Penerimaan Barang) di buku besar stok persediaan. Alur ini secara otomatis mengakomodasi kasus penerimaan sebagian (parsial) maupun pengiriman berlebih (over receiving).
+POST /purchase-orders/{id}/record-invoice
+Membukukan dokumen nota tagihan finansial (invoice) dari pemasok sebagai dasar validasi utang.
+POST /purchase-orders/{id}/record-payment
+Mendokumentasikan realisasi arus kas keluar untuk pelunasan utang dagang kepada pihak pemasok.
+GET /purchase-orders
+Menampilkan keseluruhan lembar histori dokumen pengadaan yang dapat disortir berdasar penyaringan status dokumen.
+
+4. PRODUCTION API (Transformasi Pencampuran & Pengemasan Ulang)
+Tujuan Utama: Memantau dan mengkalkulasi konversi dari bahan baku mentah melalui proses pencampuran (mixing) atau pengemasan ulang (repacking) menjadi komoditas ritel siap jual.
+Endpoint API
+Deskripsi & Aturan Operasional
+ 
+POST /production-batches
+[Titik Aksi Utama] Menjalankan otorisasi pembuatan satu siklus kelompok produksi (batch).
+• Masukan Data: Mencakup ID Formula acuan, berat bahan mentah masuk, jumlah kemasan hasil jadi, dan toleransi penyusutan material.
+• Proses Otomatis Server: Memvalidasi batas minimum stok di toko, memotong saldo bahan mentah awal (PRODUCTION_INPUT), menambah saldo produk kemasan jadi (PRODUCTION_OUTPUT), mencatat penyusutan timbangan (PRODUCTION_LOSS) pada buku besar stok persediaan, serta menghitung nilai HPP (Harga Pokok Penjualan) per produk secara real-time.
+GET /production-batches
+Menarik arsip data histori seluruh kegiatan operasional batch produksi yang pernah diselesaikan oleh tim toko.
+GET /production-batches/{batch_number}
+Menganalisis detail silsilah asal-usul bahan baku (traceability / kemampuan ketertelusuran produk) dari satu nomor kelompok produksi tertentu.
+
+5. INVENTORY API (Manajemen Pengendalian Stok & Mutasi Persediaan)
+Tujuan Utama: Menyajikan visibilitas kuantitas persediaan di seluruh lokasi serta mengawal alur mutasi logistik internal maupun audit stok fisik.
+Endpoint API
+Deskripsi & Aturan Operasional
+ 
+GET /inventory/balances
+Menampilkan akumulasi kuantitas saldo sisa stok terkini untuk tiap varian barang di seluruh cabang gudang dan outlet.
+GET /inventory/ledger
+Menandai histori mutasi kartu stok digital (inventory ledger) yang melacak runut kronologis masuk-keluar barang.
+POST /stock-transfers
+Menginisiasi berkas pengajuan transfer perpindahan barang antar-cabang outlet (Status awal: Requested).
+POST /stock-transfers/{id}/approve
+Otorisasi persetujuan dari pihak pemilik usaha (Owner) atas dokumen usulan pemindahan persediaan (Status: Approved).
+POST /stock-transfers/{id}/dispatch
+Konfirmasi dari toko asal bahwa barang telah mulai diberangkatkan. Mengurangi stok cabang pengirim dan mengubah status perjalanan barang menjadi In Transit (Sedang dalam Perjalanan).
+POST /stock-transfers/{id}/receive
+Konfirmasi serah terima barang oleh gerai tujuan, menetapkan status final menjadi Completed (Selesai), serta mencatat pembukuan khusus apabila ditemukan kasus kerusakan atau kehilangan barang di jalan.
+POST /stock-opnames
+Membuka masa pengerjaan audit opname persediaan fisik (stock opname) serta merekam potret instan saldo versi database pada waktu tersebut (snapshot stok).
+POST /stock-opnames/{id}/submit-counts
+Mengunggah data akumulasi perhitungan riil barang fisik di rak toko yang diinput oleh petugas kasir gerai.
+POST /stock-opnames/{id}/approve-adjustment
+Otorisasi Owner untuk mengeksekusi penyesuaian otomatis nilai saldo database guna menyelaraskan selisih hasil fisik lapangan.
+
+6. SALES & CASH API (Pencatatan Penjualan Retail & Arus Kas Gerai)
+Tujuan Utama: Membukukan transaksi penjualan langsung ke pembeli, mengelola pengembalian barang pelanggan, serta mengamankan pelaporan modal laci uang kasir.
+Endpoint API
+Deskripsi & Aturan Operasional
+ 
+POST /sales-transactions
+[Endpoint Paling Sering Diakses] Memproses transaksi pembelanjaan konsumen di meja kasir.
+• Masukan Data: Rincian item belanjaan dan detail jenis cara bayar (mendukung sistem pembayaran gabungan atau multi-payment).
+• Proses Otomatis Server: Menerbitkan dokumen nota digital, memotong saldo stok produk jadi dengan label sandi transaksi (SALE), membukukan uang masuk, dan mengalkulasi margin profit kotor seketika.
+POST /sales-transactions/{id}/void-request
+Kasir mengajukan permohonan resmi pembatalan nota struk belanja (void) yang sudah telanjur diselesaikan.
+POST /sales-transactions/{id}/approve-void
+Otorisasi Owner di web untuk menyetujui pembatalan permanen struk penjualan atas usulan tim kasir.
+POST /returns
+Mengadministrasikan penanganan retur produk dari pembeli dan otomatis menerbitkan entri pemulihan barang berkondisi bagus (RETURN_GOOD) atau barang berkondisi cacat/rusak (RETURN_DAMAGED).
+POST /cash-sessions/open
+Merekam dimulainya pengerjaan shift kasir baru dengan kewajiban memasukkan saldo modal tunai awal di dalam laci meja kas.
+POST /cash-sessions/close
+Menutup aktivitas kasir sekaligus memicu proses audit pencocokan jumlah saldo sistem dengan uang fisik tunai di tangan (rekonsiliasi kas) pada akhir masa kerja.
+POST /store-expenses
+Pencatatan pengeluaran tak terduga bernominal kecil (petty cash / dana kas kecil) yang dibayarkan menggunakan modal tunai dalam laci gerai toko.
+
+7. REPORTING API (Sistem Pelaporan Intelijen Bisnis)
+Tujuan Utama: Memasok data transaksional matang siap olah guna disuguhkan ke panel ringkasan eksekutif (dashboard) manajemen utama.
+Endpoint API
+Deskripsi & Aturan Operasional
+ 
+GET /reports/sales
+Menyusun matriks analisis performa omset penjualan ritel dengan fleksibilitas filter (berdasarkan jenis produk, filter gerai toko, atau durasi periode waktu).
+GET /reports/profit
+Menyedian laporan neraca perhitungan laba-rugi bersih per komoditas barang, per cabang gerai, hingga bentuk pelaporan gabungan serentak (konsolidasi data bisnis).
+GET /reports/inventory
+Menyediakan informasi volume total stok persediaan, penilaian nilai aset uang yang mengendap pada barang (valuasi inventaris), serta indikator peringatan stok kritis.
+GET /reports/production
+Menampilkan rekapitulasi performa efisiensi produksi, evaluasi akurasi formula resep, serta visualisasi grafik tingkat kehilangan bahan.
+GET /reports/purchasing
+Menampilkan histori transaksi pembelanjaan barang ke supplier, kartu skor keandalan pasokan pemasok, serta rekap saldo utang dagang berjalan.
+
+Spesifikasi Detil Cetak Biru Komunikasi Sistem (Studi Kasus Endpoint)
+Untuk memberikan standar kejelasan teknis bagi tim developer, di bawah ini dipaparkan rancangan dokumentasi terperinci yang diaplikasikan pada salah satu fungsi komputerisasi sistem:
+Endpoint Teknis
+POST /production-batches
+Fungsi Utama
+Mengeksekusi jalannya pengubahan (transformasi) bahan baku mentah melalui pencampuran atau pengemasan ulang menjadi produk komoditas bermerek siap jual.
+Aktor Otoritas
+Staf Pelaksana Produksi / Petugas Kasir Outlet Toko.
+
+Struktur Format Permintaan Data (Request Body JSON)
+Struktur payload berupa format data kurung kurawal (JSON) yang dihantarkan dari aplikasi kasir tablet menuju server sistem:
+{
+  "store_id": "uuid-toko-a",
+  "recipe_version_id": "uuid-resep-premium-v2",
+  "inputs": [
+    { "raw_material_id": "uuid-beras-ramos", "quantity_kg": 70 },
+    { "raw_material_id": "uuid-pandan-wangi", "quantity_kg": 30 }
+  ],
+  "packaging": [
+    { "packaging_material_id": "uuid-karung-5kg", "quantity": 19 }
+  ],
+  "output": {
+    "selling_product_id": "uuid-beras-premium-5kg",
+    "quantity_produced": 19,
+    "total_weight_kg": 94.5 
+  },
+  "notes": "Produksi pagi hari"
+}
+
+
+Alur Tata Validasi Aturan Bisnis Server
+Audit Ketersediaan Barang: Server mendeteksi sisa kuantitas seluruh komponen bahan baku (inputs) dan kantong wadah (packaging) pada toko bersangkutan (store_id). Jika tidak mencukupi, proses ditolak dan dilepas kode galat.
+Kalkulasi Massa Masuk: Mengakumulasikan bobot bahan baku awal yang dituangkan, contoh: 70 kg + 30 kg = 100 kg (total_input_weight).
+Kalkulasi Massa Keluar: Menghitung berat bersih riil hasil akhir pengemasan, contoh: 94.5 kg (total_output_weight).
+Analisis Deviasi Penyusutan: Memetakan porsi persentase barang menyusut di lapangan dengan rumus: ((100 - 94.5) / 100) = 5.5% (loss_percentage).
+Proteksi Ambang Batas Toleransi: Mencocokkan angka deviasi susut (5.5%) terhadap standar toleransi baku resep (contoh: batas aman resep adalah 2%). Apabila melampaui ambang batas toleransi, status batch dialihkan menjadi Pending Approval (Menunggu Tinjauan Otorisasi) dan notifikasi dikirimkan langsung ke Owner. Jika aman, proses otomatis diteruskan.
+Mekanisme Tahapan Pemrosesan Database (Backend Steps)
+Menerbitkan baris records transaksi baru di dalam tabel histori production_batches.
+Membukukan pemotongan jumlah bahan baku mentah pada kartu stok digital (tabel inventory_ledger) bernilai negatif memakai tipe kode transaksi PRODUCTION_INPUT_RAW.
+Membukukan pengurangan jumlah kemasan pembungkus di tabel persediaan bernilai negatif memakai tipe kode transaksi PRODUCTION_INPUT_PKG.
+Membukukan penambahan kuantitas saldo produk kemasan jadi siap jual bernilai positif memakai tipe kode transaksi PRODUCTION_OUTPUT.
+Apabila ditemukan selisih berat menyusut, server mengunggah catatan koreksi stok bernilai negatif memakai tipe kode transaksi PRODUCTION_LOSS.
+Menghitung akumulasi nilai HPP (Harga Pokok Penjualan) riil bagi batch ini berdasarkan kompilasi harga beli pokok historis bahan baku serta kantong pembungkus yang habis terpakai.
+Dampak Database
+Terjadi penulisan records data transaksi baru secara simultan di dalam relasi tabel production_batches and tabel inventory_ledger.
+Penanganan Defek
+Mengembalikan respon balik kode status 400 Bad Request jika kuantitas bahan baku tidak mencukupi di rak, atau respon balik kode status 403 Forbidden andai akun staf pelaksana tidak dibekali hak otorisasi akses.
+
+Struktur Data Respon Sukses Berhasil (Output JSON)
+Format kembalian data (Response) dari server sistem menuju frontend tablet setelah data berhasil disimpan:
+{
+  "batch_number": "PROD-TKOA-210626-001",
+  "status": "Completed",
+  "hpp_per_kg": 14500.75,
+  "created_at": "2026-06-21T11:34:00Z"
+}
+
+
+Pendekatan pemetaan teknis yang sangat komprehensif, terstruktur, dan presisi ini akan diterapkan secara konsisten tanpa terkecuali untuk seluruh daftar endpoint sistem sebelum dimulainya proses pengetikan baris kode program. Pola ini memastikan tim teknis pengembang maupun pemilik usaha berada dalam landasan pemahaman serta kesepakatan visi yang mutlak sama terkait pola kerja fungsionalitas sistem informasi yang dibangun.
+
+
+FASE 4: UI/UX DESIGN
+(Desain Antarmuka dan Pengalaman Pengguna)
+Seluruh struktur di bawah ini dirancang agar selaras 100% dengan panduan visual pada gambar (meliputi Warna, Tipografi/Jenis Huruf, Spasi, dan Tata Letak) serta aturan bisnis dalam PRD (Product Requirements Document atau Dokumen Persyaratan Produk). Aturan ini mencakup penggunaan satuan Kilogram (Kg), pemisahan SKU (Stock Keeping Unit atau Kode Unik Barang), fitur pembayaran ganda (multi-payment), dan spesifikasi lainnya.
+LANGKAH 8: SITEMAP (Arsitektur Navigasi)
+Mengikuti struktur 9 Modul Utama pada gambar desain referensi, berikut adalah hierarki (susunan tingkatan) menu navigasi untuk sistem BERASPLUS POS (Tampilan Pemilik/Owner):
+🏠 Dashboard (Dasbor Utama)
+Overview (Ringkasan Penjualan, Keuntungan, Stok, dan Aktivitas)
+🛍️ Sales / POS (Penjualan)
+POS Terminal (Layar Kasir Utama)
+Sales History (Riwayat Penjualan)
+Returns & Refunds (Retur dan Pengembalian Dana)
+🛒 Purchasing (Pembelian/Pengadaan)
+Suppliers (Daftar Pemasok)
+Purchase Orders / PO (Pesanan Pembelian)
+Goods Receiving (Penerimaan Barang)
+📦 Inventory (Manajemen Persediaan)
+Stock Balance (Sisa Stok Saat Ini)
+Stock Movement / Ledger (Riwayat Pergerakan Stok)
+Stock Transfer (Pindah Stok Antar Cabang)
+Stock Opname (Pencocokan Fisik Stok)
+Damaged Inventory (Barang Rusak)
+🥣 Mixing (Pencampuran)
+Recipes / Formula (Resep Campuran)
+Mixing Batches (Riwayat Pencampuran)
+Create Mixing (Buat Sesi Pencampuran Baru)
+⚖️ Repacking (Pengemasan Ulang)
+Repacking Batches (Riwayat Pengemasan Ulang)
+Create Repacking (Buat Sesi Pengemasan Ulang Baru)
+💰 Finance (Keuangan)
+Cash Drawer (Buka/Tutup Laci Kasir)
+Cash Reconciliation (Pencocokan Saldo Kas)
+Store Expenses (Pengeluaran Toko)
+📊 Reports (Laporan)
+Sales Report (Laporan Penjualan)
+Profit Report (Laporan Keuntungan)
+Inventory Report (Laporan Persediaan)
+Purchasing Report (Laporan Pembelian)
+⚙️ Settings (Pengaturan)
+Store Management (Manajemen Cabang Toko)
+User Management (Manajemen Pengguna/Staf)
+Product & Categories (Produk dan Kategori)
+System Configuration (Konfigurasi Sistem)
+LANGKAH 9: DAFTAR LAYAR (Screen List)
+Berikut adalah perincian halaman-halaman kunci yang harus dibuat oleh pengembang (developer). Secara keseluruhan, diperkirakan terdapat sekitar 45 halaman inti. Di bawah ini adalah detail untuk halaman-halaman utama:
+Nama Layar & Modul
+Tujuan & Pengguna
+Data yang Ditampilkan
+Aksi (Tindakan)
+ 
+1. POS (Sales) Screen
+(Modul Sales)
+Tujuan: Melayani transaksi penjualan harian.
+Pengguna: Kasir
+Filter Kategori (Semua, Premium, Karungan, dll), Daftar Produk (Gambar, Nama, Harga, Stok), Keranjang Belanja, Subtotal, Diskon, Pajak.
+Tambah ke Keranjang, Ubah Jumlah (Qty), Pilih Pembayaran (Tunai, QRIS, Debit, Transfer), Bayar.
+2. Sales History Screen
+(Modul Sales)
+Tujuan: Melihat riwayat transaksi (lunas/batal).
+Pengguna: Owner, Kasir
+No. Nota, Tanggal, Jam, Kasir, Total Belanja, Metode Pembayaran, Status (Selesai/Dibatalkan).
+Cari (Search), Filter Tanggal, Lihat Detail, Ajukan Pembatalan (Request Void).
+3. Purchase Order List
+(Modul Purchasing)
+Tujuan: Melihat daftar pesanan ke pemasok.
+Pengguna: Owner, Purchasing
+No. PO, Tanggal, Pemasok (Supplier), Total Harga (Rp), Status (Draf, Terkirim, Diterima Sebagian, Selesai).
+Buat PO Baru, Lihat Detail.
+4. Create Purchase Order
+(Modul Purchasing)
+Tujuan: Membuat draf pesanan baru.
+Pengguna: Owner, Purchasing
+Menu Tarik-Turun (Dropdown) Pemasok, Tanggal, Form Input Barang (Produk, Jumlah, Satuan, Harga, Subtotal), Pajak & Diskon.
+Tambah Barang, Hapus Baris, Simpan Draf, Kirim PO (Submit).
+5. Create Mixing Batch
+(Modul Mixing)
+Tujuan: Melakukan pencampuran bahan baku.
+Pengguna: Kasir, Owner
+No. Batch, Tanggal, Dropdown Resep, Target Output (Kg), Gudang Asal, Gudang Tujuan.
+Proses Produksi (Mixing).
+6. Create Repacking
+(Modul Repacking)
+Tujuan: Memecah beras karung besar ke eceran.
+Pengguna: Kasir, Owner
+Dropdown Produk Sumber, Stok Tersedia, Dropdown Produk Output, Input Jumlah (Kg), Estimasi Hasil, Estimasi Penyusutan (Loss), Catatan.
+Proses Pengemasan Ulang (Repacking).
+7. Stock Balance Screen
+(Modul Inventory)
+Tujuan: Melihat sisa stok riil saat ini.
+Pengguna: Owner, Kasir
+SKU, Nama Produk, Kategori, Stok Tersedia (Tampilan Kg & Satuan), Gudang/Toko.
+Cari (Search), Ekspor Data (Export).
+
+LANGKAH 10: WIREFRAME (Kerangka Tata Letak Halaman)
+Alih-alih menggambar ulang secara manual, berikut adalah struktur tata letak (layout) kode yang harus diikuti oleh pengembang untuk membangun antarmuka pengguna (UI) yang sama persis dengan panduan visual.
+A. Wireframe: POS (Sales) Screen
+TATA LETAK HALAMAN: Layar Terbagi (65% Panel Kiri / 35% Panel Kanan)
+PANEL KIRI (Area Produk)
+Header: Bilah Pencarian (Cari produk / barcode) beserta Ikon Kaca Pembesar.
+Tab Kategori (Tombol): [Semua (Aktif/Hijau)] [Premium] [Medium] [Ekonomis] [Karungan] [Eceran].
+Grid Produk (4 Kolom):
+Gambar (Karung Beras)
+Judul: Ramos Premium 5 Kg
+Harga: Rp 75.000
+Sub-teks: Stok: 120
+PANEL KANAN (Area Keranjang)
+Header: Teks "Keranjang (3)".
+Daftar Item Keranjang:
+Baris 1: Ramos Premium 5 Kg (75.000) | Kontrol: [-] [ 2 ] [+] | Total: Rp 150.000
+Bagian Perhitungan:
+Subtotal: Rp 575.000
+Diskon (Teks Hijau): Rp 25.000
+Pajak (PPN 11%): Rp 5.500
+TOTAL (Tebal, 20px): Rp 555.500
+Tombol Metode Pembayaran (Grid 2x2): [Tunai (Aktif/Garis Hijau)] [QRIS] [Debit] [Transfer] [Lainnya].
+Tombol Aksi Utama: TOMBOL HIJAU BESAR (#2E7D32) bertuliskan "BAYAR Rp 555.500".
+
+B. Wireframe: Dashboard Screen
+TATA LETAK HALAMAN: Bilah Samping (Sidebar) + Konten Utama (Main Content)
+
+Bilah Navigasi Atas (Top App Bar): Bilah Pencarian | Ikon Lonceng (Notifikasi) | Ikon Pengaturan | Profil Pengguna (Admin).
+Bilah Samping Kiri (Sidebar):
+Logo: Ramos Beras
+Menu Utama: Dashboard (Aktif/Hijau), Sales, Purchasing, Inventory, Mixing, Repacking, Finance, Reports, Settings.
+Konten Utama Kanan (Main Content):
+Judul: Dashboard
+Kartu Metrik Atas (4 Kolom):
+Penjualan Hari Ini: Rp 12.500.000 (Panah hijau +15%)
+Keuntungan: Rp 3.250.000 (Panah hijau +12%)
+Nilai Persediaan: Rp 2.850.000.000
+Stok Menipis: 24 Produk (Ikon Merah)
+Bagian Grafik (2 Kolom):
+Kiri: Tren Penjualan (Grafik Garis, Warna Hijau)
+Kanan: Tren Pembelian (Grafik Garis, Warna Emas)
+Bagian Bawah (3 Kolom):
+Kolom 1: Peringatan Stok Menipis (Daftar dengan lencana merah/oranye)
+Kolom 2: Aktivitas Terbaru (Garis Waktu / Timeline)
+Kolom 3: Ringkasan Pembelian (Teks ringkasan)
+LANGKAH 11: ALUR NAVIGASI (Navigation Flow)
+Pengembang harus mengonfigurasi rute (routing) perpindahan antar halaman dalam aplikasi sebagai berikut:
+Alur Kasir (Penjualan): Login → Buka Kas → POS Screen → Tambah Barang → Pilih Pembayaran → Bayar → Popup Cetak Struk → Kosongkan Keranjang (Kembali ke POS).
+Alur Pengemasan Ulang (Repacking): Dashboard → Menu Repacking → Buat Batch → Pilih Beras Karung (Input) → Pilih Beras Eceran (Output) → Proses → Detail Repacking (Sukses).
+Alur Pembelian (Purchasing - Owner): Dashboard → Menu Purchasing → Buat PO → Pilih Pemasok & Barang → Kirim PO → Daftar PO (Status: Terkirim/Submitted).
+
+
+
+PHASE 5 — DEVELOPMENT PLANNING (PERENCANAAN PENGEMBANGAN)
+Dokumen perencanaan ini disusun sebagai cetak biru pelaksanaan teknis untuk mentransformasikan arsitektur sistem POS (Point of Sale / Aplikasi Kasir) dan Manajemen Inventaris ke dalam tahapan implementasi riil. Rencana ini dibagi menjadi tiga pilar utama: rincian komponen sistem per lapisan (Module Breakdown), jadwal eksekusi bertahap mingguan (Sprint Planning), serta penentuan batasan fungsionalitas rilis awal (System Deliverables & Scope).
+STEP 11 — MODULE BREAKDOWN (Rincian Modul)
+Struktur sistem dipecah menjadi modul-modul modular berskala kecil yang terisolasi secara logis. Pendekatan ini mempermudah proses pengembangan, pengujian, serta pengelolaan ketergantungan antar-modul (dependency management). Urutan pengerjaan wajib mengikuti hierarki lapisan dari bawah ke atas demi menjaga stabilitas integrasi data.
+1. FOUNDATION LAYER (Lapisan Dasar)
+Modul 1: Authentication & Authorization (Autentikasi & Manajemen Hak Akses)
+Fitur Utama: Gerbang keamanan masuk dan keluar sistem bagi Pemilik (Owner) dan petugas Kasir. Menyediakan manajemen sesi aktif (Session Management) untuk menjaga keamanan akun, pengaturan peran pengguna (Role Management) guna membatasi hak akses menu, serta mempersiapkan arsitektur PIN Kasir sebagai opsi pengamanan pelapis di garda depan.
+Tabel Database: users, roles, user_roles.
+Ketergantungan (Dependency): Tidak ada. Modul ini menjadi fondasi utama seluruh sistem.
+Modul 2: Store Management (Manajemen Cabang Toko)
+Fitur Utama: Menyediakan fungsi CRUD (Create, Read, Update, Delete / Membuat, Membaca, Mengubah, dan Menghapus data) untuk operasional multi-cabang toko. Mengatur penempatan personil kerja di masing-masing cabang secara spesifik.
+Tabel Database: stores, user_stores.
+Ketergantungan (Dependency): Modul 1. Memerlukan sistem manajemen identitas agar konfigurasi toko terlindungi dari akses ilegal.
+2. MASTER DATA LAYER (Lapisan Data Induk)
+Modul 3: Master Data (Manajemen Data Induk)
+Fitur Utama: Manajemen katalog komprehensif sebagai acuan transaksi. Meliputi administrasi data Pemasok (Suppliers), Bahan Baku Mentah (Raw Materials), Produk Siap Jual atau SKU (Stock Keeping Unit / Kode Unik Identifikasi Barang), Material Kemasan (Packaging Materials), dan Kategori Produk (Categories).
+Tabel Database: suppliers, raw_materials, selling_products, packaging_materials, categories.
+Ketergantungan (Dependency): Modul 1 dan Modul 2. Data master wajib terikat pada hak akses pengguna dan cakupan cabang toko terkait.
+Modul 4: Recipe Management (Manajemen Formula & Resep)
+Fitur Utama: Menyusun komposisi formula standar untuk proses produksi atau pengemasan ulang produk. Dilengkapi dengan penjejakan versi resep (Recipe Versioning) guna mencatat histori perubahan formulasi dari waktu ke waktu tanpa merusak data produksi historis.
+Tabel Database: recipes, recipe_versions, recipe_version_inputs, recipe_version_packaging.
+Ketergantungan (Dependency): Modul 3. Formulasi resep membutuhkan data referensi dari komoditas bahan baku dan kemasan yang valid di katalog master.
+3. CORE INVENTORY & INBOUND LAYER (Lapisan Inti Inventaris & Barang Masuk)
+Modul 5: Inventory Ledger (Mesin Jurnal Mutasi Stok)
+Catatan Teknis: Komponen ini murni bekerja di latar belakang sistem sebagai Backend Engine (Mesin Pemroses Data) dan tidak menyediakan antarmuka pengguna grafis (UI / User Interface).
+Fitur Utama: Mesin pencatatan mutasi persediaan yang bersifat permanen dan tidak dapat dimodifikasi atau dihapus (Immutable Ledger). Setiap penambahan atau pengurangan stok dicatat sebagai baris data baru berdasarkan pergerakan (Pembelian, Produksi, Penjualan, dll), guna menjamin audit stok yang akurat.
+Tabel Database: inventory_ledger, inventory_locations.
+Ketergantungan (Dependency): Modul 1, Modul 2, dan Modul 3.
+Modul 6: Purchasing (Alur Pengadaan & Pembelian)
+Fitur Utama: Mengelola pengadaan barang mulai dari pembuatan dokumen Purchase Order (PO / Pesanan Pembelian), pengiriman berkas PO, penerimaan fisik komoditas (Goods Receiving), hingga verifikasi invoice dari pemasok (Supplier Invoice).
+Tabel Database: purchase_orders, purchase_order_items, goods_receipts, supplier_invoices.
+Ketergantungan (Dependency): Modul 3 dan Modul 5. Proses penerimaan barang fisik (Goods Receipt) otomatis memicu mesin Ledger untuk menambah kuantitas stok di sistem.
+4. PRODUCTION LAYER (Lapisan Eksekusi Produksi)
+Modul 7: Production (Pencampuran & Pengemasan Ulang)
+Fitur Utama: Melaksanakan perintah kerja produksi baik berupa pencampuran bahan (mixing) maupun pengemasan ulang (repacking) berdasarkan resep. Mencatat hasil akhir (output), melacak persentase penyusutan (loss), serta menghitung nilai HPP (Harga Pokok Penjualan) secara otomatis dengan metode rata-rata bergerak (Moving Average).
+Tabel Database: production_batches, production_batch_inputs, production_batch_outputs.
+Ketergantungan (Dependency): Modul 4 dan Modul 5. Proses produksi otomatis memicu mutasi pemotongan stok bahan mentah (PRODUCTION_INPUT) dan penambahan stok produk siap jual (PRODUCTION_OUTPUT) pada Jurnal Inventaris.
+5. FRONT-LINE LAYER (Lapisan Operasional Garda Depan / Kasir)
+Modul 8: POS & Sales (Aplikasi Kasir)
+Fitur Utama: Antarmuka utama penjualan yang mencakup manajemen keranjang belanja, integrasi berbagai metode pembayaran (Multi-Payment), dan pencetakan struk. Mendukung mode luring (Offline Mode) untuk menyimpan data transaksi tanpa internet, pembatalan transaksi (Void) yang membutuhkan persetujuan Pemilik, serta pencatatan retur barang.
+Tabel Database: sales_transactions, sales_transaction_items, sales_payments, sales_returns.
+Ketergantungan (Dependency): Modul 3, Modul 5, dan Modul 7. Penjualan membutuhkan kepastian ketersediaan stok produk aktif di sistem inventaris.
+Modul 9: Cash Management (Manajemen Arus Kas)
+Fitur Utama: Mengendalikan uang tunai di laci kasir. Meliputi pencatatan modal awal (Buka Laci), rekonsiliasi kasir (pencocokan jumlah fisik dengan laporan sistem) di akhir giliran kerja, serta pencatatan pengeluaran operasional toko dari kas (Store Expenses).
+Tabel Database: cash_drawers, cash_drawer_reconciliations, store_expenses.
+Ketergantungan (Dependency): Modul 8. Rekonsiliasi kas berkorelasi dengan total volume penjualan harian.
+6. BACK-OFFICE INVENTORY LAYER (Lapisan Operasional Inventaris Lanjutan)
+Modul 10: Inventory Operations (Manajemen Logistik Internal)
+Fitur Utama: Memfasilitasi pergerakan persediaan tingkat lanjut, meliputi fungsi administrasi transfer stok antar-cabang, pelaksanaan audit fisik persediaan (Stock Opname), penyesuaian administratif selisih stok (Stock Adjustment), serta dokumentasi pencatatan stok rusak (Damaged Inventory).
+Tabel Database: stock_transfers, stock_opnames, stock_adjustments.
+Ketergantungan (Dependency): Modul 5. Setiap tindakan logistik ini wajib mencatatkan riwayat ke dalam Jurnal Inventaris.
+7. ANALYTICS LAYER (Lapisan Analitik & Laporan)
+Modul 11: Reporting & Dashboard (Laporan & Dasbor Eksekutif)
+Fitur Utama: Menyediakan Dasbor visual untuk Pemilik yang merangkum metrik performa (Omzet, Profit, dan status stok kritis), pusat kendali notifikasi (Alert Center), serta kompilasi laporan penjualan riil, laporan laba rugi, dan posisi stok persediaan.
+Tabel Database: Mengakses data agregat dari seluruh tabel basis data sistem.
+Ketergantungan (Dependency): Semua modul. Laporan tidak dapat dihasilkan tanpa data transaksi operasional.
+
+STEP 12 — SPRINT PLANNING (Rencana Eksekusi Mingguan)
+Rencana implementasi di bawah didasarkan pada asumsi bahwa 1 Sprint setara dengan 1 minggu masa kerja secara bertahap dan berurutan. Jadwal ini dirancang agar setiap tahapan menghasilkan produk fungsional.
+Sprint
+Target Utama
+Output Utama / Deliverables
+ 
+Sprint 0
+Architecture & Foundation Design (Sangat Krusial)
+Merampungkan seluruh rancangan teknis sistem secara mendalam sebelum penulisan kode dimulai.
+Diagram Hubungan Entitas (ERD Final), Kamus Data (Data Dictionary), Desain API, Formulasi Algoritma Jurnal Inventaris, dan kerangka tampilan dasar (Wireframe UI) aplikasi kasir.
+Sprint 1
+Authentication & Store Setup
+Membuka akses aman sistem dan membangun kerangka dasar cabang.
+Fungsi Login/Logout aman, pengaturan manajemen Cabang Toko oleh Pemilik, serta manajemen akun untuk tenaga Kasir.
+Sprint 2
+Master Data Catalog
+Mengisi seluruh pangkalan data utama operasional.
+Modul manajemen untuk Pemasok (Supplier), Bahan Baku Mentah, Material Kemasan, Kategori, dan Identifikasi Produk Jual (SKU).
+Sprint 3
+Recipe Engine & Purchasing Flow
+Mendefinisikan formula produksi dan mengaktifkan jalur pasokan bahan.
+Modul formulasi rancangan Resep Produksi, dokumen Purchase Order (PO), serta Penerimaan Barang Fisik (Goods Receiving) sebagai inisiasi stok bahan.
+Sprint 4
+Inventory Ledger & Production
+Mengubah bahan baku menjadi produk jadi dengan mutasi persediaan yang akurat secara real-time.
+Implementasi Mesin Jurnal Inventaris di latar belakang (backend), serta modul Batch Produksi (mengurangi bahan baku, menambah produk, menghitung penyusutan, dan HPP).
+Sprint 5
+POS Core (Sistem Kasir Utama)
+Melayani transaksi pelanggan di garda depan (toko).
+Antarmuka POS (Katalog Pencarian Cepat), Keranjang Belanja, fitur Pembayaran Komprehensif (Multi-Payment), dan integrasi pencetakan struk penjualan.
+Sprint 6
+POS Operations & Cash Management
+Mengamankan arus dan rekonsiliasi keuangan fisik meja kasir.
+Fitur Buka/Tutup Kas, pencatatan Biaya Operasional Toko (Expenses), pembatalan transaksi sah (Void), dan pengelolaan Retur Barang.
+Sprint 7
+Advanced Inventory Operations
+Memfasilitasi audit dan kelancaran pergerakan stok internal.
+Modul Transfer Barang antar-cabang, pelaksanaan Pengecekan Fisik Stok (Stock Opname), Penyesuaian Administratif Saldo (Stock Adjustment), dan pencatatan Stok Rusak.
+Sprint 8
+Dashboard, Alerts & Reporting
+Menyediakan analitik pandangan eksekutif untuk Pemilik bisnis.
+Dashboard visual (Omzet, Profit), Panel Notifikasi (Peringatan Stok Kritis dan Void), serta pelaporan tabel lengkap dengan kapabilitas Ekspor file Excel.
+Sprint 9
+Offline Mode & Synchronization
+Menjamin operasional kasir tahan terhadap gangguan jaringan internet.
+Database lokal di perangkat Tablet kasir (SQLite/Room), penyimpanan transaksi luring, dan sinkronisasi otomatis ke pangkalan data awan terpusat saat koneksi aktif.
+Sprint 10
+UAT (User Acceptance Testing) & Bug Fixing
+Menuntaskan fase pengujian operasional final dan pembersihan sistem.
+Aplikasi stabil bebas kesalahan (bugs), penyelesaian migrasi data mula-mula, pengarahan kasir pengguna (training), dan penyiapan eksekusi perilisan final (Go-Live).
+
+
+DELIVERABLE AKHIR PHASE 5 (Ruang Lingkup Sistem)
+Ruang lingkup pengembangan dibagi menjadi dua cakupan utama guna mempercepat target perilisan produk ke meja kasir (toko).
+MVP Scope (Produk Rilis Pertama — Layak Go Live)
+Kumpulan fitur yang wajib dan mutlak ada pada fase awal agar bisnis usaha dapat melepaskan diri dari sistem pencatatan administrasi manual secara utuh:
+Manajemen Autentikasi Keamanan: Infrastruktur Login/Logout dan manajemen hak akses.
+Manajemen Master Data Terpusat: Pengaturan Bahan Baku, Produk Jual, Kemasan, serta informasi direktori Pemasok.
+Mesin Resep Produksi: Dukungan pengemasan ulang (repacking) dan pencampuran komposisi (mixing) bahan secara presisi.
+Administrasi Logistik Inbound: Penerimaan fisik barang secara langsung dari Pemasok (Goods Receiving).
+Terminal Kasir Utama (POS Core): Sistem kasir handal siap luring dengan integrasi modul cetak struk serta Multi-Payment.
+Jurnal Persediaan Permanen (Inventory Ledger): Pembukuan kartu stok riwayat digital yang sepenuhnya otomatis dan aman dari tindakan manipulasi.
+Rekonsiliasi Keuangan Harian: Fasilitas pelaporan buka modal laci kasir hingga rekonsiliasi akhir jam kerja.
+Dashboard Analisis Pemilik: Kompilasi indikator nilai omzet harian, angka persediaan persis, hingga taksiran dasar Laba-Rugi sederhana.
+Logistik Multi-Cabang Lanjutan: Akses kapabilitas audit jumlah komoditas (Stock Opname) serta manajemen arus transfer inventaris di setiap cabang usaha.
+Future Scope (Fase Pengembangan Lanjutan — Pasca MVP)
+Rangkaian inisiatif teknologi berikut dikategorikan esensial untuk skala pembesaran pasar, namun akan dijadwalkan pada siklus pembaharuan pasca peluncuran (perilisan rilis tahap pertama):
+Fase 2 (Manajemen Gudang Terpusat): Dukungan pangkalan Gudang Sentral untuk kebutuhan pengaturan stok curah massal serta sistem logistik pengiriman komersial tingkat makro.
+Fase 3 (Integrasi Agregator & Platform Eksternal): Penyusunan interkoneksi integrasi API langsung ke gerai elektronik (Tokopedia/Shopee) serta integrasi laporan tagihan melalui gerbang automasi WhatsApp.
+Fase 4 (CRM & Loyalti Pelanggan): Pembentukan direktori lengkap pembeli ritel, historis transaksi individu harian, hingga pelaksanaan skema poin loyalitas bagi anggota aktif perseroan.
+Aplikasi Mobile Monitoring Owner: Pemrograman aplikasi orisinal via komputasi gawai genggam untuk Apple (iOS) dan Android untuk melacak rasio keuntungan dan real-time metrik penelusuran tanpa menyalakan peramban halaman web.
+
+
