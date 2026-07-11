@@ -257,13 +257,13 @@ export default function FinanceClient({
                         </span>
                       </td>
                       <td className="py-4.5 max-w-xs truncate">
-                        {exp.description || '-'}
+                        {exp.notes || '-'}
                       </td>
                       <td className="py-4.5 font-mono font-semibold text-slate-100">
                         Rp {Number(exp.amount).toLocaleString('id-ID')}
                       </td>
                       <td className="py-4.5">
-                        {exp.is_approved_by_owner ? (
+                        {exp.approved_by ? (
                           <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
                             <Check className="w-3.5 h-3.5" /> Disetujui Owner
                           </span>
@@ -275,7 +275,7 @@ export default function FinanceClient({
                       </td>
                       {isOwner && (
                         <td className="py-4.5 text-right pr-2">
-                          {!exp.is_approved_by_owner && (
+                          {!exp.approved_by && (
                             <button
                               onClick={() => handleApprove(exp.id)}
                               disabled={loading}

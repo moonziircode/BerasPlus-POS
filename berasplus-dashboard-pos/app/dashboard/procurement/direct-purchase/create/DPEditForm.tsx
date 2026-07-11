@@ -279,13 +279,13 @@ export default function DPEditForm({
             <ShoppingCart className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             <span>1. Header Pembelian Langsung</span>
           </h2>
-          <div className="mt-4 grid gap-6 sm:grid-cols-3">
+          <div className="mt-4 grid gap-6 sm:grid-cols-3 items-end">
             {/* Store Destination */}
-            <div>
+            <div className="space-y-2">
               <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                 Toko / Cabang Penerima
               </label>
-              <div className="relative mt-2">
+              <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400">
                   <Store className="h-4 w-4" />
                 </div>
@@ -306,11 +306,29 @@ export default function DPEditForm({
             </div>
 
             {/* Supplier Selector */}
-            <div>
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Supplier / Pemasok
-                </label>
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Supplier / Pemasok
+              </label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400">
+                    <UserCheck className="h-4 w-4" />
+                  </div>
+                  <select
+                    required
+                    value={supplierId}
+                    onChange={(e) => setSupplierId(e.target.value)}
+                    className="block w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-3 text-sm text-zinc-900 placeholder-zinc-400 transition-all focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:border-emerald-500 dark:focus:bg-zinc-900"
+                  >
+                    <option value="" disabled>-- Pilih Supplier --</option>
+                    {supplierOptions.map((sup) => (
+                      <option key={sup.id} value={sup.id}>
+                        {sup.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <AddSupplierModal
                   onSupplierAdded={(newSupplier) => {
                     setSupplierOptions((prev) => [...prev, newSupplier])
@@ -318,32 +336,14 @@ export default function DPEditForm({
                   }}
                 />
               </div>
-              <div className="relative mt-2">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400">
-                  <UserCheck className="h-4 w-4" />
-                </div>
-                <select
-                  required
-                  value={supplierId}
-                  onChange={(e) => setSupplierId(e.target.value)}
-                  className="block w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-3 text-sm text-zinc-900 placeholder-zinc-400 transition-all focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:border-emerald-500 dark:focus:bg-zinc-900"
-                >
-                  <option value="" disabled>-- Pilih Supplier --</option>
-                  {supplierOptions.map((sup) => (
-                    <option key={sup.id} value={sup.id}>
-                      {sup.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
 
             {/* Purchase Date */}
-            <div>
+            <div className="space-y-2">
               <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                 Tanggal Pembelian
               </label>
-              <div className="relative mt-2">
+              <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400">
                   <Calendar className="h-4 w-4" />
                 </div>
@@ -366,17 +366,6 @@ export default function DPEditForm({
               <ShoppingCart className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               <span>2. Daftar Item Pembelian</span>
             </h2>
-            <div className="flex items-center gap-2">
-
-              <button
-                type="button"
-                onClick={addRow}
-                className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 py-1 text-xs font-semibold text-zinc-700 transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Tambah Baris</span>
-              </button>
-            </div>
           </div>
 
           <div className="mt-4 space-y-4">
@@ -417,34 +406,43 @@ export default function DPEditForm({
                         options={itemOptions}
                         value={row.composite_key}
                         onChange={(val) => handleRowChange(index, 'composite_key', val)}
-                        onAddNewRawMaterial={async (query) => {
-                          const defaultCategory = categories[0]?.id
-                          if (!defaultCategory) {
-                            alert('Harap buat Kategori master terlebih dahulu sebelum menambah bahan baku otomatis.')
-                            return
-                          }
-                          try {
-                            const newRm = await createRawMaterialDP({
-                              name: query,
-                              category_id: defaultCategory,
-                              conversion_factor: 50 // default
-                            })
-                            setRawMaterialOptions(prev => [...prev, newRm])
-                            handleRowChange(index, 'composite_key', `RAW_MATERIAL:${newRm.id}`)
-                          } catch (e: any) {
-                            alert(e.message || 'Gagal membuat bahan baku baru')
-                          }
-                        }}
-                        onAddNewPackaging={async (query) => {
-                          try {
-                            const newPkg = await createPackagingMaterialDP({
-                              name: query,
-                              buy_price_per_pcs: 0
-                            })
-                            setPackagingMaterialOptions(prev => [...prev, newPkg])
-                            handleRowChange(index, 'composite_key', `PACKAGING:${newPkg.id}`)
-                          } catch (e: any) {
-                            alert(e.message || 'Gagal membuat kemasan baru')
+                        onAddNew={async (query) => {
+                          const normalized = query.toLowerCase()
+                          const isPkg = normalized.includes('pack') || 
+                                        normalized.includes('kemasan') || 
+                                        normalized.includes('plastik') || 
+                                        normalized.includes('karung kosong') ||
+                                        normalized.includes('sak') ||
+                                        normalized.includes('pcs')
+
+                          if (isPkg) {
+                            try {
+                              const newPkg = await createPackagingMaterialDP({
+                                name: query,
+                                buy_price_per_pcs: 0
+                              })
+                              setPackagingMaterialOptions(prev => [...prev, newPkg])
+                              handleRowChange(index, 'composite_key', `PACKAGING:${newPkg.id}`)
+                            } catch (e: any) {
+                              alert(e.message || 'Gagal membuat kemasan baru')
+                            }
+                          } else {
+                            const defaultCategory = categories[0]?.id
+                            if (!defaultCategory) {
+                              alert('Harap buat Kategori master terlebih dahulu sebelum menambah bahan baku otomatis.')
+                              return
+                            }
+                            try {
+                              const newRm = await createRawMaterialDP({
+                                name: query,
+                                category_id: defaultCategory,
+                                conversion_factor: 50 // default
+                              })
+                              setRawMaterialOptions(prev => [...prev, newRm])
+                              handleRowChange(index, 'composite_key', `RAW_MATERIAL:${newRm.id}`)
+                            } catch (e: any) {
+                              alert(e.message || 'Gagal membuat bahan baku baru')
+                            }
                           }
                         }}
                       />
@@ -500,6 +498,17 @@ export default function DPEditForm({
                 </div>
               )
             })}
+          </div>
+
+          <div className="mt-4 pt-2 border-t border-dashed border-zinc-200 dark:border-zinc-800">
+            <button
+              type="button"
+              onClick={addRow}
+              className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-semibold text-zinc-700 shadow-sm transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-850"
+            >
+              <Plus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <span>Tambah Baris Baru</span>
+            </button>
           </div>
 
           {/* Grand Total Display */}

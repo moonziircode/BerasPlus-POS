@@ -13,8 +13,7 @@ interface ItemComboboxProps {
   options: Option[]
   value: string
   onChange: (value: string) => void
-  onAddNewRawMaterial: (searchQuery: string) => void
-  onAddNewPackaging: (searchQuery: string) => void
+  onAddNew?: (query: string) => void
   placeholder?: string
 }
 
@@ -22,8 +21,7 @@ export default function ItemCombobox({
   options,
   value,
   onChange,
-  onAddNewRawMaterial,
-  onAddNewPackaging,
+  onAddNew,
   placeholder = "Cari Item..."
 }: ItemComboboxProps) {
   const [open, setOpen] = useState(false)
@@ -77,14 +75,28 @@ export default function ItemCombobox({
                 placeholder="Ketik untuk mencari..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={async (e) => {
+                  if (e.key === 'Enter' && query.trim() !== '') {
+                    e.preventDefault()
+                    if (onAddNew) {
+                      onAddNew(query.trim())
+                    }
+                    setOpen(false)
+                    setQuery('')
+                  }
+                }}
               />
             </div>
           </div>
 
           <div className="py-1">
             {filteredOptions.length === 0 ? (
-              <div className="px-3 py-2 text-sm text-zinc-500 dark:text-zinc-400">
-                Item tidak ditemukan.
+              <div className="px-3 py-4 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                {query.trim() !== '' ? (
+                  <span>Ketik dan tekan <strong className="text-zinc-800 dark:text-zinc-200">Enter</strong> untuk membuat <strong>"{query}"</strong> baru</span>
+                ) : (
+                  <span>Item tidak ditemukan.</span>
+                )}
               </div>
             ) : (
               filteredOptions.map((opt) => (
@@ -109,37 +121,6 @@ export default function ItemCombobox({
               ))
             )}
           </div>
-
-          {/* Add New Item Shortcuts */}
-          {query.length > 0 && (
-            <div className="sticky bottom-0 border-t border-zinc-100 bg-zinc-50 p-2 dark:border-zinc-700 dark:bg-zinc-850">
-              <p className="px-2 pb-1 text-xs text-zinc-500">Tambahkan "{query}" sebagai:</p>
-              <div className="flex flex-col gap-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onAddNewRawMaterial(query)
-                    setOpen(false)
-                  }}
-                  className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium text-emerald-700 hover:bg-emerald-100 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
-                >
-                  <PlusCircle className="h-3.5 w-3.5" />
-                  Bahan Baku Baru
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onAddNewPackaging(query)
-                    setOpen(false)
-                  }}
-                  className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium text-blue-700 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900/40"
-                >
-                  <PlusCircle className="h-3.5 w-3.5" />
-                  Kemasan Baru
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>

@@ -1,13 +1,14 @@
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
-import { Plus, Package, Store, CheckCircle, Clock, AlertTriangle, History } from 'lucide-react'
+import { Plus, Package } from 'lucide-react'
+import RepackingListClient from './RepackingListClient'
 
 export const dynamic = 'force-dynamic'
 
 export default async function RepackingPage() {
   const supabase = await createClient()
 
-  // Fetch production batches of type 'REPACKING'
+  // 1. Fetch production batches of type 'REPACKING'
   const { data: batches, error } = await supabase
     .from('production_batches')
     .select(`
@@ -19,6 +20,7 @@ export default async function RepackingPage() {
       status,
       notes,
       created_at,
+      created_by,
       type,
       stores (
         id,
@@ -38,17 +40,17 @@ export default async function RepackingPage() {
     .eq('type', 'REPACKING')
     .order('created_at', { ascending: false })
 
-  // Date formatting helper
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('id-ID', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
+  // 2. Fetch all stores for filter option
+  const { data: stores } = await supabase
+    .from('stores')
+    .select('id, name')
+    .order('name')
+
+  // 3. Fetch all user profiles for operator/creator filter option
+  const { data: users } = await supabase
+    .from('users')
+    .select('id, full_name')
+    .order('full_name')
 
   return (
     <div className="space-y-6 font-sans">
@@ -80,132 +82,12 @@ export default async function RepackingPage() {
         </div>
       )}
 
-      {/* Batches Table */}
-      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="overflow-x-auto">
-          {batches && batches.length > 0 ? (
-            <table className="w-full border-collapse text-left text-sm text-zinc-600 dark:text-zinc-400">
-              <thead className="border-b border-zinc-200 bg-zinc-50 font-semibold text-zinc-700 dark:border-zinc-800 dark:bg-zinc-800/50 dark:text-zinc-300">
-                <tr>
-                  <th scope="col" className="px-6 py-4">No Batch</th>
-                  <th scope="col" className="px-6 py-4">Toko</th>
-                  <th scope="col" className="px-6 py-4">Produk Hasil</th>
-                  <th scope="col" className="px-6 py-4">Total Input (Kg)</th>
-                  <th scope="col" className="px-6 py-4">Hasil Pack</th>
-                  <th scope="col" className="px-6 py-4">Susut (Loss)</th>
-                  <th scope="col" className="px-6 py-4">Tanggal</th>
-                  <th scope="col" className="px-6 py-4">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                {batches.map((batch) => {
-                  const storeName = batch.stores
-                    ? Array.isArray(batch.stores)
-                      ? batch.stores[0]?.name
-                      : (batch.stores as any).name
-                    : 'Gudang Utama'
-
-                  // Output item details
-                  const outputItem = batch.production_batch_outputs && Array.isArray(batch.production_batch_outputs)
-                    ? batch.production_batch_outputs[0]
-                    : batch.production_batch_outputs
-
-                  const productName = outputItem?.selling_products
-                    ? Array.isArray(outputItem.selling_products)
-                      ? outputItem.selling_products[0]?.name
-                      : (outputItem.selling_products as any).name
-                    : 'Produk Tidak Ditemukan'
-
-                  const productSku = outputItem?.selling_products
-                    ? Array.isArray(outputItem.selling_products)
-                      ? outputItem.selling_products[0]?.sku
-                      : (outputItem.selling_products as any).sku
-                    : ''
-
-                  const packsCount = outputItem && outputItem.quantity_pcs ? Number(outputItem.quantity_pcs) : 0
-                  const inputWeight = batch.total_input_weight_kg ? Number(batch.total_input_weight_kg) : 0
-                  const lossPct = batch.loss_percentage ? Number(batch.loss_percentage) : 0
-
-                  return (
-                    <tr
-                      key={batch.id}
-                      className="group transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30"
-                    >
-                      <td className="whitespace-nowrap px-6 py-4 font-mono text-xs font-semibold text-zinc-950 dark:text-zinc-50">
-                        {batch.batch_number}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <Store className="h-3.5 w-3.5 text-zinc-400" />
-                          <span className="font-medium text-zinc-900 dark:text-zinc-100">{storeName}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="font-semibold text-zinc-900 dark:text-zinc-100">
-                            {productName}
-                          </div>
-                          <div className="text-xs text-zinc-400 font-mono">{productSku}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 font-semibold text-zinc-900 dark:text-zinc-100">
-                        {inputWeight.toFixed(2)} Kg
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center rounded-lg bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
-                          {packsCount} Pack
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1.5">
-                          <span className={`font-semibold ${
-                            lossPct > 2
-                              ? 'text-amber-600 dark:text-amber-400'
-                              : 'text-zinc-600 dark:text-zinc-400'
-                          }`}>
-                            {lossPct.toFixed(2)}%
-                          </span>
-                          {lossPct > 2 && (
-                            <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                          )}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-xs text-zinc-500">
-                        {formatDate(batch.created_at)}
-                      </td>
-                      <td className="px-6 py-4">
-                        {batch.status === 'Completed' ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
-                            <CheckCircle className="h-3 w-3" />
-                            <span>Selesai</span>
-                          </span>
-                        ) : batch.status === 'Pending Approval' ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-950/20 dark:text-amber-400">
-                            <Clock className="h-3 w-3" />
-                            <span>Butuh Approval</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                            <span>{batch.status}</span>
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <History className="h-12 w-12 text-zinc-300 dark:text-zinc-700 mb-4 animate-pulse" />
-              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Belum ada riwayat repacking</h3>
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400 max-w-xs">
-                Klik tombol di atas untuk memulai pengemasan ulang beras curah pertama Anda.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Render the Client List Component */}
+      <RepackingListClient
+        initialBatches={(batches as any) || []}
+        stores={stores || []}
+        users={users || []}
+      />
     </div>
   )
 }

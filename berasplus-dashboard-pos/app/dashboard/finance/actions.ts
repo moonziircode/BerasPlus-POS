@@ -18,7 +18,7 @@ export async function getFinanceMetrics(storeId: string) {
   // 2. Fetch total expenses (pengeluaran)
   const { data: expenses, error: expErr } = await supabase
     .from('store_expenses')
-    .select('amount, category, is_approved_by_owner')
+    .select('amount, category, approved_by')
     .eq('store_id', storeId)
 
   if (expErr) {
@@ -33,8 +33,8 @@ export async function getFinanceMetrics(storeId: string) {
   const totalDiscounts = activeSales.reduce((sum, s) => sum + Number(s.discount), 0) || 0
   const totalTax = activeSales.reduce((sum, s) => sum + Number(s.tax), 0) || 0
 
-  const approvedExpenses = expenses?.filter(e => e.is_approved_by_owner) || []
-  const pendingExpenses = expenses?.filter(e => !e.is_approved_by_owner) || []
+  const approvedExpenses = expenses?.filter(e => e.approved_by !== null) || []
+  const pendingExpenses = expenses?.filter(e => e.approved_by === null) || []
   
   const totalExpenses = expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0
   const totalApprovedExpenses = approvedExpenses.reduce((sum, e) => sum + Number(e.amount), 0) || 0
@@ -62,8 +62,8 @@ export async function getRecentExpenses(storeId: string) {
       id,
       amount,
       category,
-      description,
-      is_approved_by_owner,
+      notes,
+      approved_by,
       created_at
     `)
     .eq('store_id', storeId)
@@ -189,11 +189,12 @@ export async function createExpense(formData: {
     .from('store_expenses')
     .insert([{
       store_id: formData.store_id,
-      cashier_id: user.id,
       amount: formData.amount,
       category: formData.category,
-      description: formData.description || null,
-      is_approved_by_owner: isOwner // Auto-approve if created by Owner
+      notes: formData.description || null,
+      expense_date: new Date().toISOString().split('T')[0], // Set required expense_date
+      approved_by: isOwner ? user.id : null,
+      approved_at: isOwner ? new Date().toISOString() : null
     }])
 
   if (error) {
@@ -204,9 +205,15 @@ export async function createExpense(formData: {
 export async function approveExpense(expenseId: string) {
   const supabase = await createClient()
 
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('User tidak terautentikasi.')
+
   const { error } = await supabase
     .from('store_expenses')
-    .update({ is_approved_by_owner: true })
+    .update({ 
+      approved_by: user.id,
+      approved_at: new Date().toISOString()
+    })
     .eq('id', expenseId)
 
   if (error) {
