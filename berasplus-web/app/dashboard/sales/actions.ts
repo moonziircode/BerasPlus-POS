@@ -132,3 +132,97 @@ export async function processCheckout(payload: {
     return { error: err.message || 'An unexpected error occurred' }
   }
 }
+
+export async function getSalesTransactions(filters: {
+  search?: string,
+  dateStart?: string,
+  dateEnd?: string,
+  storeId?: string,
+  paymentMethod?: string,
+  status?: string,
+  sortBy?: 'latest' | 'oldest',
+  page?: number,
+  pageSize?: number
+}) {
+  const supabase = await createClient()
+
+  // Base query
+  let query = supabase
+    .from('sales_transactions')
+    .select(`
+      id,
+      created_at,
+      transaction_number,
+      total,
+      subtotal,
+      discount,
+      tax,
+      payment_method,
+      status,
+      notes,
+      stores ( name ),
+      users ( full_name ),
+      customers ( name ),
+      sales_transaction_items (
+        id,
+        quantity,
+        price_per_unit,
+        hpp_per_unit,
+        subtotal,
+        discount,
+        total,
+        selling_products ( name )
+      )
+    `, { count: 'exact' })
+
+  // Apply filters
+  if (filters.storeId) {
+    query = query.eq('store_id', filters.storeId)
+  }
+  if (filters.paymentMethod) {
+    query = query.eq('payment_method', filters.paymentMethod)
+  }
+  if (filters.status) {
+    query = query.eq('status', filters.status)
+  }
+  if (filters.dateStart) {
+    query = query.gte('created_at', filters.dateStart)
+  }
+  if (filters.dateEnd) {
+    query = query.lte('created_at', filters.dateEnd)
+  }
+  if (filters.search) {
+    query = query.or(`transaction_number.ilike.%${filters.search}%,notes.ilike.%${filters.search}%`)
+  }
+
+  // Sorting
+  const isAscending = filters.sortBy === 'oldest'
+  query = query.order('created_at', { ascending: isAscending })
+
+  // Pagination
+  const page = filters.page || 1
+  const pageSize = filters.pageSize || 10
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+  query = query.range(from, to)
+
+  const { data, count, error } = await query
+
+  if (error) {
+    console.error('Error fetching sales transactions:', error)
+    return { data: [], count: 0, error: error.message }
+  }
+
+  return { data: data || [], count: count || 0 }
+}
+
+export async function getStores() {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('stores')
+    .select('id, name')
+    .order('name')
+  if (error) return []
+  return data || []
+}
+

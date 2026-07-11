@@ -1,9 +1,11 @@
 import { createClient } from '@/utils/supabase/server'
-import { getPOSData } from './actions'
-import POSClient from '@/components/POS/POSClient'
+import { getSalesTransactions, getStores } from './actions'
+import SalesHistory from '@/components/Sales/SalesHistory'
 import { redirect } from 'next/navigation'
 
-export default async function SalesPOSPage() {
+export const dynamic = 'force-dynamic'
+
+export default async function SalesHistoryPage() {
   const supabase = await createClient()
 
   // Get active user and their store
@@ -12,31 +14,21 @@ export default async function SalesPOSPage() {
     redirect('/auth/login')
   }
 
-  // Fetch the store assigned to this user
-  const { data: userStore } = await supabase
-    .from('user_stores')
-    .select('store_id')
-    .eq('user_id', user.id)
-    .single()
+  // Fetch initial sales transactions
+  const result = await getSalesTransactions({
+    page: 1,
+    pageSize: 10,
+    sortBy: 'latest'
+  })
 
-  if (!userStore) {
-    return <div className="p-8 text-center text-rose-500">Akses ditolak: Anda belum ditugaskan ke cabang toko manapun.</div>
-  }
-
-  // Fetch products and customers
-  const posData = await getPOSData(userStore.store_id)
-
-  if (posData.error) {
-    return <div className="p-8 text-center text-rose-500">Error: {posData.error}</div>
-  }
+  // Fetch stores list for filtering
+  const stores = await getStores()
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-hidden">
-      <POSClient 
-        storeId={userStore.store_id} 
-        initialProducts={posData.products} 
-        initialCustomers={posData.customers} 
-      />
-    </div>
+    <SalesHistory 
+      initialTransactions={result.data || []} 
+      initialCount={result.count || 0}
+      stores={stores}
+    />
   )
 }
