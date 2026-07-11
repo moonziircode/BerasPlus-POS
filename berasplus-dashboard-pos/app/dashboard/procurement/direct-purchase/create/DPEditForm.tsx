@@ -56,12 +56,17 @@ export interface InitialData {
   supplier_id: string
   purchase_date: string
   notes: string | null
+  amount_paid: number
+  transport_cost: number
+  transport_note: string | null
+  transfer_checked: boolean
   items: Array<{
     id: string
     item_type: 'RAW_MATERIAL' | 'PACKAGING'
     raw_material_id: string | null
     packaging_material_id: string | null
     quantity: number
+    total_kg: number | null
     price_per_unit: number
   }>
 }
@@ -99,6 +104,10 @@ export default function DPEditForm({
   const [rawMaterialOptions, setRawMaterialOptions] = useState<RawMaterialOption[]>(rawMaterials)
   const [packagingMaterialOptions, setPackagingMaterialOptions] = useState<PackagingOption[]>(packagingMaterials)
   const [notes, setNotes] = useState(initialData.notes || '')
+  const [amountPaid, setAmountPaid] = useState(initialData.amount_paid.toString())
+  const [transportCost, setTransportCost] = useState(initialData.transport_cost.toString())
+  const [transportNote, setTransportNote] = useState(initialData.transport_note || '')
+  const [transferChecked, setTransferChecked] = useState(initialData.transfer_checked)
 
   // Dynamic Array for DP Items
   const [items, setItems] = useState<Array<{
@@ -106,6 +115,7 @@ export default function DPEditForm({
     item_type: 'RAW_MATERIAL' | 'PACKAGING' | ''
     item_id: string
     quantity: string
+    total_kg: string
     price_per_unit: string
   }>>(
     initialData.items.map(item => {
@@ -115,6 +125,7 @@ export default function DPEditForm({
         item_type: item.item_type,
         item_id: itemId as string,
         quantity: item.quantity.toString(),
+        total_kg: item.total_kg ? item.total_kg.toString() : '',
         price_per_unit: item.price_per_unit.toString()
       }
     })
@@ -144,7 +155,7 @@ export default function DPEditForm({
 
   // Handlers for rows
   const addRow = () => {
-    setItems([...items, { composite_key: '', item_type: '', item_id: '', quantity: '', price_per_unit: '' }])
+    setItems([...items, { composite_key: '', item_type: '', item_id: '', quantity: '', total_kg: '', price_per_unit: '' }])
   }
 
   const removeRow = (index: number) => {
@@ -158,11 +169,24 @@ export default function DPEditForm({
     
     if (field === 'composite_key') {
       const [type, id] = value.split(':')
+      const opt = itemOptions.find(o => o.key === value)
+      const conv = opt?.conversion_factor || 50
+      const qty = parseFloat(updated[index].quantity) || 0
       updated[index] = {
         ...updated[index],
         composite_key: value,
         item_type: type as any,
-        item_id: id
+        item_id: id,
+        total_kg: type === 'RAW_MATERIAL' ? (qty * conv).toString() : ''
+      }
+    } else if (field === 'quantity') {
+      const qty = parseFloat(value) || 0
+      const opt = itemOptions.find(o => o.key === updated[index].composite_key)
+      const conv = opt?.conversion_factor || 50
+      updated[index] = {
+        ...updated[index],
+        quantity: value,
+        total_kg: updated[index].item_type === 'RAW_MATERIAL' ? (qty * conv).toString() : ''
       }
     } else {
       updated[index] = {
@@ -229,10 +253,15 @@ export default function DPEditForm({
         supplier_id: supplierId,
         purchase_date: purchaseDate,
         notes: notes || undefined,
+        amount_paid: parseFloat(amountPaid) || 0,
+        transport_cost: parseFloat(transportCost) || 0,
+        transport_note: transportNote || undefined,
+        transfer_checked: transferChecked,
         items: items.map(row => ({
           item_type: row.item_type as 'RAW_MATERIAL' | 'PACKAGING',
           item_id: row.item_id,
           quantity: parseFloat(row.quantity),
+          total_kg: row.item_type === 'RAW_MATERIAL' ? parseFloat(row.total_kg) : undefined,
           price_per_unit: parseFloat(row.price_per_unit),
         }))
       })
@@ -387,13 +416,6 @@ export default function DPEditForm({
               const price = parseFloat(row.price_per_unit) || 0
               const subtotal = qty * price
               const selectedOption = itemOptions.find(opt => opt.key === row.composite_key)
-              const baseUnit = (selectedOption as any)?.base_unit || 'Kg'
-              const conversion = selectedOption?.conversion_factor || 1
-              const totalKg = row.item_type === 'RAW_MATERIAL'
-                ? (baseUnit.toLowerCase() !== 'kg' && baseUnit.toLowerCase() !== 'kilogram'
-                  ? convertToKg(qty, baseUnit, conversionFactors)
-                  : qty * conversion)
-                : 0
 
               return (
                 <div key={index} className="flex items-center gap-3">
@@ -460,12 +482,16 @@ export default function DPEditForm({
                       />
                     </div>
 
-                    <div className="flex items-center">
+                    <div>
                       <input
-                        type="text"
-                        readOnly
-                        value={row.item_type === 'RAW_MATERIAL' ? `${totalKg.toFixed(2)} Kg` : '-'}
-                        className="block w-full rounded-lg border border-zinc-200 bg-zinc-100 py-2 px-3 text-sm text-zinc-500 cursor-not-allowed dark:border-zinc-700 dark:bg-zinc-850 dark:text-zinc-400"
+                        type="number"
+                        step="any"
+                        disabled={row.item_type !== 'RAW_MATERIAL'}
+                        required={row.item_type === 'RAW_MATERIAL'}
+                        placeholder="Total Kg"
+                        value={row.total_kg}
+                        onChange={(e) => handleRowChange(index, 'total_kg', e.target.value)}
+                        className="block w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2 px-3 text-sm text-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:disabled:bg-zinc-850 dark:disabled:text-zinc-500"
                       />
                     </div>
 
@@ -512,19 +538,123 @@ export default function DPEditForm({
           </div>
 
           {/* Grand Total Display */}
-          <div className="mt-6 flex justify-end border-t border-zinc-100 pt-4 dark:border-zinc-800">
-            <div className="text-right">
+          <div className="mt-6 flex flex-col md:flex-row md:justify-between border-t border-zinc-100 pt-4 dark:border-zinc-800 gap-4">
+            <div className="text-left bg-zinc-50 dark:bg-zinc-850 p-4 rounded-xl flex-1 border border-zinc-100 dark:border-zinc-800/50">
+              <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block">
+                Ringkasan Biaya
+              </span>
+              <div className="mt-2 space-y-1.5 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Subtotal Item:</span>
+                  <span className="font-mono font-semibold text-zinc-800 dark:text-zinc-200">{formatRupiah(calculateGrandTotal())}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Biaya Transportasi:</span>
+                  <span className="font-mono font-semibold text-zinc-800 dark:text-zinc-200">{formatRupiah(parseFloat(transportCost) || 0)}</span>
+                </div>
+                <div className="flex justify-between border-t border-zinc-200 dark:border-zinc-700 pt-1.5 font-bold">
+                  <span className="text-zinc-700 dark:text-zinc-300">Total Keseluruhan:</span>
+                  <span className="font-mono text-emerald-600 dark:text-emerald-400 text-base">{formatRupiah(calculateGrandTotal() + (parseFloat(transportCost) || 0))}</span>
+                </div>
+              </div>
+            </div>
+            <div className="text-right flex flex-col justify-end">
               <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block">
                 Total Biaya Pembelian
               </span>
               <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-mono block mt-1">
-                {formatRupiah(calculateGrandTotal())}
+                {formatRupiah(calculateGrandTotal() + (parseFloat(transportCost) || 0))}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Section 3: Notes & Actions */}
+        {/* Section 3: Payment & Transport */}
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 space-y-6">
+          <h2 className="flex items-center gap-2 text-base font-bold text-zinc-900 dark:text-zinc-50 border-b border-zinc-100 pb-3 dark:border-zinc-800">
+            <Coins className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <span>3. Informasi Pembayaran & Biaya Transportasi</span>
+          </h2>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Nominal Dibayar (Rupiah)
+                </label>
+                <input
+                  type="number"
+                  step="500"
+                  required
+                  placeholder="Contoh: 1500000"
+                  value={amountPaid}
+                  onChange={(e) => setAmountPaid(e.target.value)}
+                  className="mt-2 block w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2.5 px-3.5 text-sm text-zinc-900 placeholder-zinc-400 transition-all focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center bg-zinc-50 dark:bg-zinc-850 p-3 rounded-lg border border-zinc-150 dark:border-zinc-800">
+                  <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Status Pembayaran Otomatis</span>
+                  {(() => {
+                    const total = calculateGrandTotal() + (parseFloat(transportCost) || 0)
+                    const paid = parseFloat(amountPaid) || 0
+                    if (paid === 0) {
+                      return <span className="inline-flex rounded-full bg-rose-50 px-2.5 py-1 text-xs font-bold uppercase text-rose-600 ring-1 ring-inset ring-rose-600/20 dark:bg-rose-950 dark:text-rose-455">Belum Dibayar</span>
+                    } else if (paid < total) {
+                      return <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold uppercase text-amber-600 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-950 dark:text-amber-455">Dibayar Sebagian</span>
+                    } else {
+                      return <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold uppercase text-emerald-600 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950 dark:text-emerald-455">Lunas</span>
+                    }
+                  })()}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="transfer_checked"
+                  checked={transferChecked}
+                  onChange={(e) => setTransferChecked(e.target.checked)}
+                  className="h-4 w-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-emerald-500"
+                />
+                <label htmlFor="transfer_checked" className="text-sm font-medium text-zinc-700 dark:text-zinc-300 select-none">
+                  Saya sudah melakukan transfer kepada supplier.
+                </label>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Biaya Transportasi / Ongkir (Opsional)
+                </label>
+                <input
+                  type="number"
+                  step="500"
+                  placeholder="Contoh: 100000"
+                  value={transportCost}
+                  onChange={(e) => setTransportCost(e.target.value)}
+                  className="mt-2 block w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2.5 px-3.5 text-sm text-zinc-900 placeholder-zinc-400 transition-all focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Keterangan Transportasi (Opsional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Ekspedisi JNE / Kurir Supplier"
+                  value={transportNote}
+                  onChange={(e) => setTransportNote(e.target.value)}
+                  className="mt-2 block w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2.5 px-3.5 text-sm text-zinc-900 placeholder-zinc-400 transition-all focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 4: Notes & Actions */}
         <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 space-y-4">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">

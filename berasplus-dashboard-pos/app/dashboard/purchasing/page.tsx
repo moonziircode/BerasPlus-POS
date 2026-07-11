@@ -18,6 +18,9 @@ export default async function PurchasingPage() {
       total_amount,
       created_at,
       store_id,
+      payment_status,
+      amount_paid,
+      transfer_checked,
       stores (
         id,
         name
@@ -92,6 +95,7 @@ export default async function PurchasingPage() {
                   <th scope="col" className="px-6 py-4">Total Biaya</th>
                   <th scope="col" className="px-6 py-4">Tanggal Buat</th>
                   <th scope="col" className="px-6 py-4">Status</th>
+                  <th scope="col" className="px-6 py-4">Status Bayar</th>
                   <th scope="col" className="px-6 py-4 text-right">Aksi Penerimaan</th>
                 </tr>
               </thead>
@@ -114,7 +118,7 @@ export default async function PurchasingPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <Store className="h-4 w-4 text-zinc-450 shrink-0" />
+                           <Store className="h-4 w-4 text-zinc-450 shrink-0" />
                           <span className="font-medium text-zinc-900 dark:text-zinc-100">{storeName}</span>
                         </div>
                       </td>
@@ -145,8 +149,23 @@ export default async function PurchasingPage() {
                             <span>Dikirim</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-650 dark:bg-zinc-800 dark:text-zinc-400">
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-650 dark:bg-zinc-800/30 dark:text-zinc-400">
                             <span>{po.status}</span>
+                          </span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        {po.payment_status === 'Lunas' ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold uppercase text-emerald-600 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950 dark:text-emerald-400">
+                            Lunas
+                          </span>
+                        ) : po.payment_status === 'Dibayar Sebagian' ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold uppercase text-amber-600 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-950 dark:text-amber-400">
+                            Sebagian
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-bold uppercase text-rose-600 ring-1 ring-inset ring-rose-600/20 dark:bg-rose-950 dark:text-rose-400">
+                            Belum Lunas
                           </span>
                         )}
                       </td>
@@ -156,6 +175,7 @@ export default async function PurchasingPage() {
                             poId={po.id}
                             storeId={po.store_id}
                             poNumber={po.po_number}
+                            paymentStatus={po.payment_status}
                           />
                         ) : (
                           <span className="text-xs text-zinc-400 dark:text-zinc-600 font-medium italic">

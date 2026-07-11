@@ -8,6 +8,7 @@ interface DPItemInput {
   item_id: string
   quantity: number
   price_per_unit: number
+  total_kg?: number
 }
 
 export async function createDirectPurchase(formData: {
@@ -15,6 +16,10 @@ export async function createDirectPurchase(formData: {
   supplier_id: string
   purchase_date: string
   notes?: string
+  amount_paid: number
+  transport_cost: number
+  transport_note?: string
+  transfer_checked: boolean
   items: DPItemInput[]
 }) {
   const supabase = await createClient()
@@ -32,10 +37,23 @@ export async function createDirectPurchase(formData: {
     throw new Error('User tidak terautentikasi.')
   }
 
-  // Calculate total amount
-  const totalAmount = formData.items.reduce((sum, item) => {
+  // Calculate items subtotal
+  const itemsSubtotal = formData.items.reduce((sum, item) => {
     return sum + (item.quantity * item.price_per_unit)
   }, 0)
+
+  // Total amount includes transport cost
+  const totalAmount = itemsSubtotal + (formData.transport_cost || 0)
+
+  // Determine payment status
+  let paymentStatus = 'Belum Dibayar'
+  if (formData.amount_paid > 0) {
+    if (formData.amount_paid >= totalAmount) {
+      paymentStatus = 'Lunas'
+    } else {
+      paymentStatus = 'Dibayar Sebagian'
+    }
+  }
 
   // 1. Insert Direct Purchase Header (Default status: Waiting Delivery)
   const { data: dpData, error: dpError } = await supabase
@@ -49,6 +67,12 @@ export async function createDirectPurchase(formData: {
         total_amount: totalAmount,
         notes: formData.notes || null,
         created_by: user.id,
+        payment_status: paymentStatus,
+        amount_paid: formData.amount_paid || 0,
+        transport_cost: formData.transport_cost || 0,
+        transport_note: formData.transport_note || null,
+        transfer_checked: formData.transfer_checked || false,
+        payment_date: paymentStatus === 'Lunas' ? new Date().toISOString() : null,
       },
     ])
     .select('id')
@@ -61,31 +85,9 @@ export async function createDirectPurchase(formData: {
   const dpId = dpData.id
 
   try {
-    // 2. Fetch conversion factors for raw materials to calculate total_kg
-    const rawMaterialIds = formData.items
-      .filter((item) => item.item_type === 'RAW_MATERIAL')
-      .map((item) => item.item_id)
-
-    let conversionMap: Record<string, number> = {}
-    if (rawMaterialIds.length > 0) {
-      const { data: rawMaterials, error: rmError } = await supabase
-        .from('raw_materials')
-        .select('id, conversion_factor')
-        .in('id', rawMaterialIds)
-
-      if (rmError) {
-        throw new Error(`Gagal mengambil data konversi bahan baku: ${rmError.message}`)
-      }
-
-      rawMaterials?.forEach((rm) => {
-        conversionMap[rm.id] = parseFloat(rm.conversion_factor) || 1
-      })
-    }
-
-    // 3. Insert Direct Purchase Items
+    // 2. Insert Direct Purchase Items (using manual total_kg for Raw Materials)
     const itemsInsert = formData.items.map((item) => {
       const isRaw = item.item_type === 'RAW_MATERIAL'
-      const conversion = isRaw ? (conversionMap[item.item_id] || 1) : 0
       return {
         dp_id: dpId,
         raw_material_id: isRaw ? item.item_id : null,
@@ -93,7 +95,7 @@ export async function createDirectPurchase(formData: {
         quantity: item.quantity,
         price_per_unit: item.price_per_unit,
         subtotal: item.quantity * item.price_per_unit,
-        total_kg: isRaw ? (item.quantity * conversion) : null,
+        total_kg: isRaw ? (item.total_kg || 0) : null,
       }
     })
 
@@ -121,6 +123,10 @@ export async function updateDirectPurchase(
     supplier_id: string
     purchase_date: string
     notes?: string
+    amount_paid: number
+    transport_cost: number
+    transport_note?: string
+    transfer_checked: boolean
     items: DPItemInput[]
   }
 ) {
@@ -130,10 +136,23 @@ export async function updateDirectPurchase(
     throw new Error('Pembelian harus memiliki minimal 1 item.')
   }
 
-  // Calculate total amount
-  const totalAmount = formData.items.reduce((sum, item) => {
+  // Calculate items subtotal
+  const itemsSubtotal = formData.items.reduce((sum, item) => {
     return sum + (item.quantity * item.price_per_unit)
   }, 0)
+
+  // Total amount includes transport cost
+  const totalAmount = itemsSubtotal + (formData.transport_cost || 0)
+
+  // Determine payment status
+  let paymentStatus = 'Belum Dibayar'
+  if (formData.amount_paid > 0) {
+    if (formData.amount_paid >= totalAmount) {
+      paymentStatus = 'Lunas'
+    } else {
+      paymentStatus = 'Dibayar Sebagian'
+    }
+  }
 
   // 1. Update Direct Purchase Header
   const { error: dpError } = await supabase
@@ -144,6 +163,12 @@ export async function updateDirectPurchase(
       purchase_date: formData.purchase_date,
       total_amount: totalAmount,
       notes: formData.notes || null,
+      payment_status: paymentStatus,
+      amount_paid: formData.amount_paid || 0,
+      transport_cost: formData.transport_cost || 0,
+      transport_note: formData.transport_note || null,
+      transfer_checked: formData.transfer_checked || false,
+      payment_date: paymentStatus === 'Lunas' ? new Date().toISOString() : null,
     })
     .eq('id', dpId)
     .eq('status', 'Waiting Delivery') // Ensure it can only be updated if Waiting Delivery
@@ -152,28 +177,7 @@ export async function updateDirectPurchase(
     throw new Error(`Gagal memperbarui pembelian: ${dpError.message}`)
   }
 
-  // 2. Fetch conversion factors for raw materials to calculate total_kg
-  const rawMaterialIds = formData.items
-    .filter((item) => item.item_type === 'RAW_MATERIAL')
-    .map((item) => item.item_id)
-
-  let conversionMap: Record<string, number> = {}
-  if (rawMaterialIds.length > 0) {
-    const { data: rawMaterials, error: rmError } = await supabase
-      .from('raw_materials')
-      .select('id, conversion_factor')
-      .in('id', rawMaterialIds)
-
-    if (rmError) {
-      throw new Error(`Gagal mengambil data konversi bahan baku: ${rmError.message}`)
-    }
-
-    rawMaterials?.forEach((rm) => {
-      conversionMap[rm.id] = parseFloat(rm.conversion_factor) || 1
-    })
-  }
-
-  // 3. Delete existing items
+  // 2. Delete existing items
   const { error: deleteError } = await supabase
     .from('direct_purchase_items')
     .delete()
@@ -183,10 +187,9 @@ export async function updateDirectPurchase(
     throw new Error(`Gagal menghapus item pembelian lama: ${deleteError.message}`)
   }
 
-  // 4. Insert new items
+  // 3. Insert new items
   const itemsInsert = formData.items.map((item) => {
     const isRaw = item.item_type === 'RAW_MATERIAL'
-    const conversion = isRaw ? (conversionMap[item.item_id] || 1) : 0
     return {
       dp_id: dpId,
       raw_material_id: isRaw ? item.item_id : null,
@@ -194,7 +197,7 @@ export async function updateDirectPurchase(
       quantity: item.quantity,
       price_per_unit: item.price_per_unit,
       subtotal: item.quantity * item.price_per_unit,
-      total_kg: isRaw ? (item.quantity * conversion) : null,
+      total_kg: isRaw ? (item.total_kg || 0) : null,
     }
   })
 
@@ -213,11 +216,28 @@ export async function updateDirectPurchase(
 export async function receiveDPGoods(
   dpId: string, 
   storeId: string,
-  actuals: { id: string; actualQty: number; actualTotalKg: number | null }[]
+  actuals: { id: string; actualQty: number; discrepancyReasonId?: string | null; discrepancyNote?: string | null }[]
 ) {
   const supabase = await createClient()
 
-  // 1. Fetch the corresponding inventory location for this store of type 'STORE'
+  // 1. Fetch direct purchase details including payment status and transport cost
+  const { data: purchase, error: purchaseError } = await supabase
+    .from('direct_purchases')
+    .select('payment_status, transport_cost')
+    .eq('id', dpId)
+    .single()
+
+  if (purchaseError || !purchase) {
+    throw new Error('Gagal memproses penerimaan: Data pembelian tidak ditemukan.')
+  }
+
+  if (purchase.payment_status !== 'Lunas') {
+    throw new Error('Gagal memproses penerimaan: Barang tidak boleh diterima sebelum pembayaran lunas.')
+  }
+
+  const transportCost = parseFloat(purchase.transport_cost || '0')
+
+  // 2. Fetch the corresponding inventory location for this store of type 'STORE'
   const { data: locationData, error: locError } = await supabase
     .from('inventory_locations')
     .select('id')
@@ -231,7 +251,7 @@ export async function receiveDPGoods(
 
   const locationId = locationData.id
 
-  // 2. Fetch all direct purchase items
+  // 3. Fetch all direct purchase items
   const { data: dpItems, error: itemsError } = await supabase
     .from('direct_purchase_items')
     .select('*')
@@ -245,7 +265,10 @@ export async function receiveDPGoods(
     throw new Error('Data aktual tidak sesuai dengan jumlah item pesanan.')
   }
 
-  // 3. Process each item movement sequentially
+  // Calculate total subtotal of all items to allocate transport cost proportionally
+  const totalSubtotal = dpItems.reduce((sum, item) => sum + parseFloat(item.subtotal || '0'), 0)
+
+  // 4. Process each item movement sequentially
   for (const item of dpItems) {
     const actual = actuals.find(a => a.id === item.id)
     if (!actual) throw new Error('Data aktual tidak lengkap untuk item tertentu.')
@@ -254,24 +277,43 @@ export async function receiveDPGoods(
     const productId = isRaw ? item.raw_material_id : item.packaging_material_id
     const productType = isRaw ? 'RAW_MATERIAL' : 'PACKAGING'
 
-    let quantityKg = actual.actualQty
-    let hppAtTime = parseFloat(item.price_per_unit)
+    const orderedQty = parseFloat(item.quantity || '0')
+    const orderedTotalKg = parseFloat(item.total_kg || '0')
+    const itemSubtotal = parseFloat(item.subtotal || '0')
 
-    // For Raw Materials, use actualTotalKg and calculate new HPP
+    let quantityKg = actual.actualQty
+    let actualTotalKg: number | null = null
+
+    // For Raw Materials, calculate actualTotalKg proportionally
     if (isRaw) {
-      quantityKg = actual.actualTotalKg || 0
-      hppAtTime = quantityKg > 0 ? (parseFloat(item.subtotal) / quantityKg) : 0
+      actualTotalKg = orderedQty > 0 ? (actual.actualQty / orderedQty) * orderedTotalKg : 0
+      quantityKg = actualTotalKg
     }
 
-    const shrinkageKg = isRaw ? (parseFloat(item.total_kg || 0) - quantityKg) : 0
+    // Allocate transport cost proportionally based on item's subtotal
+    const allocatedTransport = totalSubtotal > 0 ? (itemSubtotal / totalSubtotal) * transportCost : 0
+    const receivedItemSubtotal = orderedQty > 0 ? (actual.actualQty / orderedQty) * itemSubtotal : 0
+    const landedCost = receivedItemSubtotal + allocatedTransport
+
+    let hppAtTime = 0
+    if (isRaw && actualTotalKg !== null) {
+      hppAtTime = actualTotalKg > 0 ? landedCost / actualTotalKg : 0
+    } else {
+      hppAtTime = actual.actualQty > 0 ? landedCost / actual.actualQty : 0
+    }
+
+    const shrinkageKg = isRaw ? (orderedTotalKg - (actualTotalKg || 0)) : 0
 
     // Update actual values to direct_purchase_items
     const { error: updateError } = await supabase
       .from('direct_purchase_items')
       .update({
-        actual_quantity: actual.actualQty,
-        actual_total_kg: actual.actualTotalKg,
-        shrinkage_kg: shrinkageKg
+        actual_quantity: actual.actualQty, // keeps database backward compatible
+        received_qty: actual.actualQty,
+        actual_total_kg: actualTotalKg,
+        shrinkage_kg: shrinkageKg,
+        discrepancy_reason_id: actual.discrepancyReasonId || null,
+        discrepancy_note: actual.discrepancyNote || null
       })
       .eq('id', item.id)
 
@@ -295,7 +337,7 @@ export async function receiveDPGoods(
     }
   }
 
-  // 4. Update status to Received
+  // 5. Update status to Received
   const { error: statusError } = await supabase
     .from('direct_purchases')
     .update({ status: 'Received' })
@@ -408,6 +450,32 @@ export async function createCategoryDP(formData: {
 
   revalidatePath('/dashboard/settings/categories')
   return data
+}
+
+export async function createDiscrepancyReason(reasonText: string) {
+  const supabase = await createClient()
+
+  const { data: existing } = await supabase
+    .from('discrepancy_reasons')
+    .select('id')
+    .eq('reason_text', reasonText)
+    .maybeSingle()
+
+  if (existing) {
+    return existing.id
+  }
+
+  const { data, error } = await supabase
+    .from('discrepancy_reasons')
+    .insert([{ reason_text: reasonText }])
+    .select('id')
+    .single()
+
+  if (error) {
+    throw new Error(`Gagal membuat alasan selisih baru: ${error.message}`)
+  }
+
+  return data.id
 }
 
 

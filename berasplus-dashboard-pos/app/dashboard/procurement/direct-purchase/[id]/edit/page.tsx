@@ -53,13 +53,18 @@ export default async function DPEditPage({ params }: { params: Promise<{ id: str
     supplier_id: dp.supplier_id,
     purchase_date: dp.purchase_date,
     notes: dp.notes,
+    amount_paid: parseFloat(dp.amount_paid || '0'),
+    transport_cost: parseFloat(dp.transport_cost || '0'),
+    transport_note: dp.transport_note,
+    transfer_checked: dp.transfer_checked || false,
     items: dpItems.map(item => ({
       id: item.id,
       item_type: item.raw_material_id ? 'RAW_MATERIAL' : 'PACKAGING',
       raw_material_id: item.raw_material_id,
       packaging_material_id: item.packaging_material_id,
-      quantity: item.quantity,
-      price_per_unit: item.price_per_unit
+      quantity: parseFloat(item.quantity || '0'),
+      total_kg: item.total_kg ? parseFloat(item.total_kg) : null,
+      price_per_unit: parseFloat(item.price_per_unit || '0')
     }))
   }
 

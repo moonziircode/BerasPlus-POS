@@ -72,6 +72,8 @@ export default function POCreateForm({
   const [supplierId, setSupplierId] = useState('')
   const [poNumber, setPoNumber] = useState(generateDefaultPONumber())
   const [supplierOptions, setSupplierOptions] = useState<SupplierOption[]>(suppliers)
+  const [amountPaid, setAmountPaid] = useState('0')
+  const [transferChecked, setTransferChecked] = useState(false)
 
   // Dynamic Array for PO Items
   const [items, setItems] = useState<Array<{
@@ -183,6 +185,8 @@ export default function POCreateForm({
         store_id: storeId,
         supplier_id: supplierId,
         po_number: poNumber,
+        amount_paid: parseFloat(amountPaid) || 0,
+        transfer_checked: transferChecked,
         items: items.map(row => ({
           item_type: row.item_type as 'RAW_MATERIAL' | 'PACKAGING',
           item_id: row.item_id,
@@ -403,6 +407,70 @@ export default function POCreateForm({
               <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-sans block mt-1">
                 {formatRupiah(calculateGrandTotal())}
               </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Payment */}
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 space-y-6">
+          <h2 className="flex items-center gap-2 text-base font-bold text-zinc-900 dark:text-zinc-50 border-b border-zinc-100 pb-3 dark:border-zinc-800">
+            <Coins className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <span>3. Informasi Pembayaran Purchase Order</span>
+          </h2>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Nominal Dibayar (Rupiah)
+                </label>
+                <input
+                  type="number"
+                  step="500"
+                  required
+                  placeholder="Contoh: 2000000"
+                  value={amountPaid}
+                  onChange={(e) => setAmountPaid(e.target.value)}
+                  className="mt-2 block w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2.5 px-3.5 text-sm text-zinc-900 placeholder-zinc-400 transition-all focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="transfer_checked"
+                  checked={transferChecked}
+                  onChange={(e) => setTransferChecked(e.target.checked)}
+                  className="h-4 w-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-emerald-500"
+                />
+                <label htmlFor="transfer_checked" className="text-sm font-medium text-zinc-700 dark:text-zinc-300 select-none">
+                  Saya sudah melakukan transfer kepada supplier.
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center bg-zinc-50 dark:bg-zinc-850 p-4 rounded-xl border border-zinc-150 dark:border-zinc-800 h-full flex-col justify-center">
+                <div className="w-full flex justify-between items-center mb-3">
+                  <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Status Pembayaran Otomatis</span>
+                  {(() => {
+                    const total = calculateGrandTotal()
+                    const paid = parseFloat(amountPaid) || 0
+                    if (paid === 0) {
+                      return <span className="inline-flex rounded-full bg-rose-50 px-2.5 py-1 text-xs font-bold uppercase text-rose-600 ring-1 ring-inset ring-rose-600/20 dark:bg-rose-950 dark:text-rose-455">Belum Dibayar</span>
+                    } else if (paid < total) {
+                      return <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold uppercase text-amber-600 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-950 dark:text-amber-455">Dibayar Sebagian</span>
+                    } else {
+                      return <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold uppercase text-emerald-600 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950 dark:text-emerald-455">Lunas</span>
+                    }
+                  })()}
+                </div>
+                <div className="w-full flex justify-between text-sm font-medium border-t border-zinc-200 dark:border-zinc-700 pt-3">
+                  <span className="text-zinc-500">Sisa Tagihan:</span>
+                  <span className="font-mono text-zinc-900 dark:text-zinc-100">
+                    {formatRupiah(Math.max(0, calculateGrandTotal() - (parseFloat(amountPaid) || 0)))}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
