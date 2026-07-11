@@ -62,9 +62,9 @@ export default function ReceiveDPGoodsModal({
 
     try {
       const payload = items.map(item => ({
-        item_id: item.id,
-        actual_quantity: parseFloat(actuals[item.id].actual_quantity || '0'),
-        actual_total_kg: actuals[item.id].actual_total_kg ? parseFloat(actuals[item.id].actual_total_kg) : null
+        id: item.id,
+        actualQty: parseFloat(actuals[item.id].actual_quantity || '0'),
+        actualTotalKg: actuals[item.id].actual_total_kg ? parseFloat(actuals[item.id].actual_total_kg) : null
       }))
 
       await receiveDPGoods(dpId, storeId, payload)
