@@ -68,6 +68,8 @@ export interface InitialData {
     quantity: number
     total_kg: number | null
     price_per_unit: number
+    unit_weight_kg?: number | null
+    total_weight_kg?: number | null
   }>
 }
 
@@ -115,6 +117,7 @@ export default function DPEditForm({
     item_type: 'RAW_MATERIAL' | 'PACKAGING' | ''
     item_id: string
     quantity: string
+    unit_weight_kg: string
     total_kg: string
     price_per_unit: string
   }>>(
@@ -125,7 +128,8 @@ export default function DPEditForm({
         item_type: item.item_type,
         item_id: itemId as string,
         quantity: item.quantity.toString(),
-        total_kg: item.total_kg ? item.total_kg.toString() : '',
+        unit_weight_kg: item.unit_weight_kg ? item.unit_weight_kg.toString() : '',
+        total_kg: item.total_weight_kg ? item.total_weight_kg.toString() : '',
         price_per_unit: item.price_per_unit.toString()
       }
     })
@@ -155,7 +159,7 @@ export default function DPEditForm({
 
   // Handlers for rows
   const addRow = () => {
-    setItems([...items, { composite_key: '', item_type: '', item_id: '', quantity: '', total_kg: '', price_per_unit: '' }])
+    setItems([...items, { composite_key: '', item_type: '', item_id: '', quantity: '', unit_weight_kg: '', total_kg: '', price_per_unit: '' }])
   }
 
   const removeRow = (index: number) => {
@@ -177,16 +181,24 @@ export default function DPEditForm({
         composite_key: value,
         item_type: type as any,
         item_id: id,
+        unit_weight_kg: type === 'RAW_MATERIAL' ? conv.toString() : '',
         total_kg: type === 'RAW_MATERIAL' ? (qty * conv).toString() : ''
       }
     } else if (field === 'quantity') {
       const qty = parseFloat(value) || 0
-      const opt = itemOptions.find(o => o.key === updated[index].composite_key)
-      const conv = opt?.conversion_factor || 50
+      const unitWt = parseFloat(updated[index].unit_weight_kg) || 0
       updated[index] = {
         ...updated[index],
         quantity: value,
-        total_kg: updated[index].item_type === 'RAW_MATERIAL' ? (qty * conv).toString() : ''
+        total_kg: updated[index].item_type === 'RAW_MATERIAL' ? (qty * unitWt).toString() : ''
+      }
+    } else if (field === 'unit_weight_kg') {
+      const qty = parseFloat(updated[index].quantity) || 0
+      const unitWt = parseFloat(value) || 0
+      updated[index] = {
+        ...updated[index],
+        unit_weight_kg: value,
+        total_kg: updated[index].item_type === 'RAW_MATERIAL' ? (qty * unitWt).toString() : ''
       }
     } else {
       updated[index] = {
@@ -261,7 +273,7 @@ export default function DPEditForm({
           item_type: row.item_type as 'RAW_MATERIAL' | 'PACKAGING',
           item_id: row.item_id,
           quantity: parseFloat(row.quantity),
-          total_kg: row.item_type === 'RAW_MATERIAL' ? parseFloat(row.total_kg) : undefined,
+          unit_weight_kg: row.item_type === 'RAW_MATERIAL' ? parseFloat(row.unit_weight_kg) : undefined,
           price_per_unit: parseFloat(row.price_per_unit),
         }))
       })
@@ -404,9 +416,10 @@ export default function DPEditForm({
                 <div className="flex-1 grid gap-4 grid-cols-7">
                   <div className="col-span-2">Nama Item</div>
                   <div>Jumlah (Qty)</div>
-                  <div>Total (Kg)</div>
+                  <div>Berat Satuan (Kg)</div>
+                  <div>Total Kg</div>
                   <div>Harga Satuan</div>
-                  <div className="col-span-2 pl-2">Subtotal</div>
+                  <div className="col-span-1 pl-2">Subtotal</div>
                 </div>
               </div>
             )}
@@ -488,10 +501,21 @@ export default function DPEditForm({
                         step="any"
                         disabled={row.item_type !== 'RAW_MATERIAL'}
                         required={row.item_type === 'RAW_MATERIAL'}
+                        placeholder="Berat Satuan (Kg)"
+                        value={row.unit_weight_kg}
+                        onChange={(e) => handleRowChange(index, 'unit_weight_kg', e.target.value)}
+                        className="block w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2 px-3 text-sm text-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:disabled:bg-zinc-850 dark:disabled:text-zinc-500"
+                      />
+                    </div>
+
+                    <div>
+                      <input
+                        type="number"
+                        step="any"
+                        disabled
                         placeholder="Total Kg"
                         value={row.total_kg}
-                        onChange={(e) => handleRowChange(index, 'total_kg', e.target.value)}
-                        className="block w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2 px-3 text-sm text-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:disabled:bg-zinc-850 dark:disabled:text-zinc-500"
+                        className="block w-full rounded-lg border border-zinc-200 bg-zinc-100 py-2 px-3 text-sm text-zinc-550 dark:border-zinc-850 dark:bg-zinc-850 dark:text-zinc-400 font-medium cursor-not-allowed"
                       />
                     </div>
 
@@ -507,7 +531,7 @@ export default function DPEditForm({
                       />
                     </div>
 
-                    <div className="flex items-center pl-2 col-span-2">
+                    <div className="flex items-center pl-2 col-span-1 font-sans">
                       <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 font-mono">
                         {formatRupiah(subtotal)}
                       </span>
@@ -578,9 +602,22 @@ export default function DPEditForm({
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Nominal Dibayar (Rupiah)
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Nominal Dibayar (Rupiah)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const total = calculateGrandTotal() + (parseFloat(transportCost) || 0)
+                      setAmountPaid(total.toString())
+                      setTransferChecked(true)
+                    }}
+                    className="text-xs font-bold text-emerald-600 hover:text-emerald-500 transition-colors"
+                  >
+                    Bayar Sesuai Tagihan
+                  </button>
+                </div>
                 <input
                   type="number"
                   step="500"

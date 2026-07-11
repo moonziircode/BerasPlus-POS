@@ -9,6 +9,7 @@ interface DPItem {
   id: string
   quantity: string
   total_kg: string | null
+  unit_weight_kg?: string | null
   raw_materials: any
   packaging_materials: any
 }
@@ -179,6 +180,7 @@ export default function ReceiveDPGoodsModal({
                         <th className="py-3 px-4">Nama Item</th>
                         <th className="py-3 px-4 text-center">Tipe</th>
                         <th className="py-3 px-4 text-right">Qty Dipesan</th>
+                        <th className="py-3 px-4 text-center">Berat Satuan</th>
                         <th className="py-3 px-4">Aktual Qty Diterima</th>
                         <th className="py-3 px-4">Alasan & Catatan Selisih</th>
                       </tr>
@@ -198,6 +200,7 @@ export default function ReceiveDPGoodsModal({
                         const orderedQty = parseFloat(item.quantity)
                         const actualQty = parseFloat(state.actualQty || '0')
                         const hasDiscrepancy = actualQty !== orderedQty
+                        const unitWeight = item.unit_weight_kg ? parseFloat(item.unit_weight_kg) : 0
 
                         return (
                           <tr key={item.id} className="text-zinc-900 dark:text-zinc-100 align-top">
@@ -211,6 +214,9 @@ export default function ReceiveDPGoodsModal({
                             </td>
                             <td className="py-4 px-4 text-right font-medium text-zinc-550 dark:text-zinc-400 font-mono">
                               {orderedQty} {unit}
+                            </td>
+                            <td className="py-4 px-4 text-center font-medium text-zinc-550 dark:text-zinc-400 font-mono">
+                              {isRaw && unitWeight > 0 ? `${unitWeight} Kg` : '-'}
                             </td>
                             <td className="py-4 px-4">
                               <div className="space-y-2">

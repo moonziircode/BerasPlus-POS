@@ -70,6 +70,9 @@ export default async function DirectPurchaseDetailPage({ params }: PageProps) {
       price_per_unit,
       subtotal,
       total_kg,
+      unit_weight_kg,
+      total_weight_kg,
+      unit_price,
       raw_materials (
         id,
         name,
@@ -294,6 +297,7 @@ export default async function DirectPurchaseDetailPage({ params }: PageProps) {
                   <th className="py-3 font-semibold">Nama Item</th>
                   <th className="py-3 font-semibold">Kode SKU</th>
                   <th className="py-3 font-semibold text-center">Jumlah (Qty)</th>
+                  <th className="py-3 font-semibold text-center">Berat Satuan</th>
                   <th className="py-3 font-semibold text-center">Total Kg</th>
                   <th className="py-3 font-semibold text-right">Harga Satuan</th>
                   <th className="py-3 font-semibold text-right">Subtotal</th>
@@ -315,6 +319,10 @@ export default async function DirectPurchaseDetailPage({ params }: PageProps) {
                       ? Array.isArray(item.raw_materials) ? item.raw_materials[0]?.base_unit : (item.raw_materials as any).base_unit
                       : 'Pcs'
 
+                    const unitWeight = item.unit_weight_kg ? parseFloat(item.unit_weight_kg) : 0
+                    const totalWeight = item.total_weight_kg ? parseFloat(item.total_weight_kg) : (item.total_kg ? parseFloat(item.total_kg) : 0)
+                    const unitPrice = item.unit_price ? parseFloat(item.unit_price) : parseFloat(item.price_per_unit)
+
                     return (
                       <tr key={item.id} className="text-zinc-900 dark:text-zinc-100">
                         <td className="py-4 font-medium">{name}</td>
@@ -323,10 +331,13 @@ export default async function DirectPurchaseDetailPage({ params }: PageProps) {
                           {parseFloat(item.quantity)} {unit}
                         </td>
                         <td className="py-4 text-center font-semibold">
-                          {isRaw && item.total_kg ? `${parseFloat(item.total_kg)} Kg` : '-'}
+                          {isRaw && unitWeight > 0 ? `${unitWeight} Kg` : '-'}
+                        </td>
+                        <td className="py-4 text-center font-semibold">
+                          {isRaw && totalWeight > 0 ? `${totalWeight} Kg` : '-'}
                         </td>
                         <td className="py-4 text-right font-mono">
-                          {formatRupiah(parseFloat(item.price_per_unit))}
+                          {formatRupiah(unitPrice)}
                         </td>
                         <td className="py-4 text-right font-bold text-emerald-600 dark:text-emerald-400 font-mono">
                           {formatRupiah(parseFloat(item.subtotal))}
@@ -336,7 +347,7 @@ export default async function DirectPurchaseDetailPage({ params }: PageProps) {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-zinc-400">
+                    <td colSpan={7} className="py-8 text-center text-zinc-400">
                       Tidak ada item dalam nota ini.
                     </td>
                   </tr>

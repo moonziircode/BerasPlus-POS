@@ -64,7 +64,9 @@ export default async function DPEditPage({ params }: { params: Promise<{ id: str
       packaging_material_id: item.packaging_material_id,
       quantity: parseFloat(item.quantity || '0'),
       total_kg: item.total_kg ? parseFloat(item.total_kg) : null,
-      price_per_unit: parseFloat(item.price_per_unit || '0')
+      price_per_unit: parseFloat(item.price_per_unit || '0'),
+      unit_weight_kg: item.unit_weight_kg ? parseFloat(item.unit_weight_kg) : null,
+      total_weight_kg: item.total_weight_kg ? parseFloat(item.total_weight_kg) : null,
     }))
   }
 

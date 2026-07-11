@@ -9,6 +9,7 @@ interface DPItemInput {
   quantity: number
   price_per_unit: number
   total_kg?: number
+  unit_weight_kg?: number
 }
 
 export async function createDirectPurchase(formData: {
@@ -85,9 +86,11 @@ export async function createDirectPurchase(formData: {
   const dpId = dpData.id
 
   try {
-    // 2. Insert Direct Purchase Items (using manual total_kg for Raw Materials)
+    // 2. Insert Direct Purchase Items (using unit_weight_kg and total_weight_kg)
     const itemsInsert = formData.items.map((item) => {
       const isRaw = item.item_type === 'RAW_MATERIAL'
+      const unitWeight = isRaw ? (item.unit_weight_kg || 0) : 0
+      const totalWeight = isRaw ? (item.quantity * unitWeight) : 0
       return {
         dp_id: dpId,
         raw_material_id: isRaw ? item.item_id : null,
@@ -95,7 +98,10 @@ export async function createDirectPurchase(formData: {
         quantity: item.quantity,
         price_per_unit: item.price_per_unit,
         subtotal: item.quantity * item.price_per_unit,
-        total_kg: isRaw ? (item.total_kg || 0) : null,
+        total_kg: isRaw ? totalWeight : null,
+        unit_price: item.price_per_unit,
+        unit_weight_kg: unitWeight,
+        total_weight_kg: totalWeight,
       }
     })
 
@@ -190,6 +196,8 @@ export async function updateDirectPurchase(
   // 3. Insert new items
   const itemsInsert = formData.items.map((item) => {
     const isRaw = item.item_type === 'RAW_MATERIAL'
+    const unitWeight = isRaw ? (item.unit_weight_kg || 0) : 0
+    const totalWeight = isRaw ? (item.quantity * unitWeight) : 0
     return {
       dp_id: dpId,
       raw_material_id: isRaw ? item.item_id : null,
@@ -197,7 +205,10 @@ export async function updateDirectPurchase(
       quantity: item.quantity,
       price_per_unit: item.price_per_unit,
       subtotal: item.quantity * item.price_per_unit,
-      total_kg: isRaw ? (item.total_kg || 0) : null,
+      total_kg: isRaw ? totalWeight : null,
+      unit_price: item.price_per_unit,
+      unit_weight_kg: unitWeight,
+      total_weight_kg: totalWeight,
     }
   })
 
@@ -277,17 +288,16 @@ export async function receiveDPGoods(
     const productId = isRaw ? item.raw_material_id : item.packaging_material_id
     const productType = isRaw ? 'RAW_MATERIAL' : 'PACKAGING'
 
+    const unitWeight = parseFloat(item.unit_weight_kg || '0')
     const orderedQty = parseFloat(item.quantity || '0')
-    const orderedTotalKg = parseFloat(item.total_kg || '0')
     const itemSubtotal = parseFloat(item.subtotal || '0')
 
     let quantityKg = actual.actualQty
-    let actualTotalKg: number | null = null
+    let receivedTotalWeightKg = 0
 
-    // For Raw Materials, calculate actualTotalKg proportionally
     if (isRaw) {
-      actualTotalKg = orderedQty > 0 ? (actual.actualQty / orderedQty) * orderedTotalKg : 0
-      quantityKg = actualTotalKg
+      receivedTotalWeightKg = actual.actualQty * unitWeight
+      quantityKg = receivedTotalWeightKg
     }
 
     // Allocate transport cost proportionally based on item's subtotal
@@ -296,21 +306,23 @@ export async function receiveDPGoods(
     const landedCost = receivedItemSubtotal + allocatedTransport
 
     let hppAtTime = 0
-    if (isRaw && actualTotalKg !== null) {
-      hppAtTime = actualTotalKg > 0 ? landedCost / actualTotalKg : 0
+    if (isRaw) {
+      hppAtTime = receivedTotalWeightKg > 0 ? landedCost / receivedTotalWeightKg : 0
     } else {
       hppAtTime = actual.actualQty > 0 ? landedCost / actual.actualQty : 0
     }
 
-    const shrinkageKg = isRaw ? (orderedTotalKg - (actualTotalKg || 0)) : 0
+    const shrinkageKg = isRaw ? (parseFloat(item.total_weight_kg || '0') - receivedTotalWeightKg) : 0
 
     // Update actual values to direct_purchase_items
     const { error: updateError } = await supabase
       .from('direct_purchase_items')
       .update({
-        actual_quantity: actual.actualQty, // keeps database backward compatible
+        actual_quantity: actual.actualQty,
         received_qty: actual.actualQty,
-        actual_total_kg: actualTotalKg,
+        received_quantity: actual.actualQty,
+        actual_total_kg: isRaw ? receivedTotalWeightKg : null,
+        received_total_weight_kg: isRaw ? receivedTotalWeightKg : null,
         shrinkage_kg: shrinkageKg,
         discrepancy_reason_id: actual.discrepancyReasonId || null,
         discrepancy_note: actual.discrepancyNote || null
