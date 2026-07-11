@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, X, Loader2, Coins, Box, Maximize2, ShieldAlert } from 'lucide-react'
 import { createPackagingMaterialDP } from '../actions'
 
@@ -12,18 +12,39 @@ interface PackagingMaterial {
 
 interface AddPackagingDPModalProps {
   onPackagingAdded: (pkg: PackagingMaterial) => void
+  isOpen?: boolean
+  onClose?: () => void
+  initialName?: string
 }
 
 export default function AddPackagingDPModal({
   onPackagingAdded,
+  isOpen: externalIsOpen,
+  onClose,
+  initialName = ''
 }: AddPackagingDPModalProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [internalIsOpen, setInternalIsOpen] = useState(false)
+
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen
+  const setIsOpen = (val: boolean) => {
+    if (externalIsOpen === undefined) {
+      setInternalIsOpen(val)
+    }
+    if (!val && onClose) {
+      onClose()
+    }
+  }
+
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
-  const [name, setName] = useState('')
+  const [name, setName] = useState(initialName)
   const [sizeDimension, setSizeDimension] = useState('')
   const [buyPrice, setBuyPrice] = useState('0')
+
+  useEffect(() => {
+    setName(initialName)
+  }, [initialName])
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -55,14 +76,16 @@ export default function AddPackagingDPModal({
   return (
     <>
       {/* Trigger Button */}
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        className="flex items-center gap-1.5 rounded-lg border border-dashed border-emerald-500/50 bg-emerald-500/5 px-2.5 py-1 text-xs font-semibold text-emerald-600 transition-all hover:bg-emerald-500/10 hover:text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/5 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
-      >
-        <Plus className="h-3.5 w-3.5" />
-        <span>Kemasan Baru</span>
-      </button>
+      {externalIsOpen === undefined && (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="flex items-center gap-1.5 rounded-lg border border-dashed border-emerald-500/50 bg-emerald-500/5 px-2.5 py-1 text-xs font-semibold text-emerald-600 transition-all hover:bg-emerald-500/10 hover:text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/5 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          <span>Kemasan Baru</span>
+        </button>
+      )}
 
       {/* Modal Dialog */}
       {isOpen && (

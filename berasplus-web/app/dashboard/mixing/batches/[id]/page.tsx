@@ -18,7 +18,8 @@ import {
 
 export const dynamic = 'force-dynamic'
 
-export default async function BatchDetailPage({ params }: { params: { id: string } }) {
+export default async function BatchDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
 
   // Fetch complete batch details
@@ -48,7 +49,7 @@ export default async function BatchDetailPage({ params }: { params: { id: string
         packaging_materials ( name )
       )
     `)
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error || !batch) {

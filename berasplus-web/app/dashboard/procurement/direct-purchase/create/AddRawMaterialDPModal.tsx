@@ -19,20 +19,41 @@ interface RawMaterial {
 interface AddRawMaterialDPModalProps {
   categories: Category[]
   onRawMaterialAdded: (rm: RawMaterial) => void
+  isOpen?: boolean
+  onClose?: () => void
+  initialName?: string
 }
 
 export default function AddRawMaterialDPModal({
   categories,
   onRawMaterialAdded,
+  isOpen: externalIsOpen,
+  onClose,
+  initialName = ''
 }: AddRawMaterialDPModalProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [internalIsOpen, setInternalIsOpen] = useState(false)
+  
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen
+  const setIsOpen = (val: boolean) => {
+    if (externalIsOpen === undefined) {
+      setInternalIsOpen(val)
+    }
+    if (!val && onClose) {
+      onClose()
+    }
+  }
+
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
-  const [name, setName] = useState('')
+  const [name, setName] = useState(initialName)
   const [categoryId, setCategoryId] = useState('')
   const [conversionFactor, setConversionFactor] = useState('1.0000')
   const [categoryOptions, setCategoryOptions] = useState<Category[]>(categories)
+
+  useEffect(() => {
+    setName(initialName)
+  }, [initialName])
 
   // Sync categoryOptions when categories prop changes
   useEffect(() => {
@@ -75,14 +96,16 @@ export default function AddRawMaterialDPModal({
   return (
     <>
       {/* Trigger Button */}
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        className="flex items-center gap-1.5 rounded-lg border border-dashed border-emerald-500/50 bg-emerald-500/5 px-2.5 py-1 text-xs font-semibold text-emerald-600 transition-all hover:bg-emerald-500/10 hover:text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/5 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
-      >
-        <Plus className="h-3.5 w-3.5" />
-        <span>Bahan Baku Baru</span>
-      </button>
+      {externalIsOpen === undefined && (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="flex items-center gap-1.5 rounded-lg border border-dashed border-emerald-500/50 bg-emerald-500/5 px-2.5 py-1 text-xs font-semibold text-emerald-600 transition-all hover:bg-emerald-500/10 hover:text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/5 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          <span>Bahan Baku Baru</span>
+        </button>
+      )}
 
       {/* Modal Dialog */}
       {isOpen && (

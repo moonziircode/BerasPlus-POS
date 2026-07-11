@@ -26,7 +26,7 @@ export default async function RepackingPage() {
       ),
       production_batch_outputs (
         id,
-        quantity,
+        quantity_pcs,
         total_weight_kg,
         selling_products (
           id,
@@ -122,7 +122,7 @@ export default async function RepackingPage() {
                       : (outputItem.selling_products as any).sku
                     : ''
 
-                  const packsCount = outputItem ? parseFloat(outputItem.quantity) : 0
+                  const packsCount = outputItem ? parseFloat(outputItem.quantity_pcs) : 0
 
                   return (
                     <tr

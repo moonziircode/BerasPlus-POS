@@ -15,7 +15,7 @@ import {
   Calendar
 } from 'lucide-react'
 import Link from 'next/link'
-import { createDirectPurchase } from '../actions'
+import { updateDirectPurchase } from '../actions'
 import AddSupplierModal from './AddSupplierModal'
 import AddRawMaterialDPModal from './AddRawMaterialDPModal'
 import AddPackagingDPModal from './AddPackagingDPModal'
@@ -49,21 +49,39 @@ interface CategoryOption {
   name: string
 }
 
-interface DPCreateFormProps {
+export interface InitialData {
+  id: string
+  store_id: string
+  supplier_id: string
+  purchase_date: string
+  notes: string | null
+  items: Array<{
+    id: string
+    item_type: 'RAW_MATERIAL' | 'PACKAGING'
+    raw_material_id: string | null
+    packaging_material_id: string | null
+    quantity: number
+    price_per_unit: number
+  }>
+}
+
+interface DPEditFormProps {
   stores: StoreOption[]
   suppliers: SupplierOption[]
   rawMaterials: RawMaterialOption[]
   packagingMaterials: PackagingOption[]
   categories: CategoryOption[]
+  initialData: InitialData
 }
 
-export default function DPCreateForm({
+export default function DPEditForm({
   stores,
   suppliers,
   rawMaterials,
   packagingMaterials,
   categories,
-}: DPCreateFormProps) {
+  initialData,
+}: DPEditFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
@@ -73,27 +91,33 @@ export default function DPCreateForm({
   const [initialModalName, setInitialModalName] = useState('')
 
   // Form Header States
-  const [storeId, setStoreId] = useState('')
-  const [supplierId, setSupplierId] = useState('')
-  const [purchaseDate, setPurchaseDate] = useState(() => {
-    const today = new Date()
-    return today.toISOString().split('T')[0] // default to today
-  })
+  const [storeId, setStoreId] = useState(initialData.store_id)
+  const [supplierId, setSupplierId] = useState(initialData.supplier_id)
+  const [purchaseDate, setPurchaseDate] = useState(initialData.purchase_date)
   const [supplierOptions, setSupplierOptions] = useState<SupplierOption[]>(suppliers)
   const [rawMaterialOptions, setRawMaterialOptions] = useState<RawMaterialOption[]>(rawMaterials)
   const [packagingMaterialOptions, setPackagingMaterialOptions] = useState<PackagingOption[]>(packagingMaterials)
-  const [notes, setNotes] = useState('')
+  const [notes, setNotes] = useState(initialData.notes || '')
 
   // Dynamic Array for DP Items
   const [items, setItems] = useState<Array<{
-    composite_key: string // helper to map select changes (item_type:item_id)
+    composite_key: string
     item_type: 'RAW_MATERIAL' | 'PACKAGING' | ''
     item_id: string
     quantity: string
     price_per_unit: string
-  }>>([
-    { composite_key: '', item_type: '', item_id: '', quantity: '', price_per_unit: '' }
-  ])
+  }>>(
+    initialData.items.map(item => {
+      const itemId = item.item_type === 'RAW_MATERIAL' ? item.raw_material_id : item.packaging_material_id
+      return {
+        composite_key: `${item.item_type}:${itemId}`,
+        item_type: item.item_type,
+        item_id: itemId as string,
+        quantity: item.quantity.toString(),
+        price_per_unit: item.price_per_unit.toString()
+      }
+    })
+  )
 
   // Combine items for select options
   const itemOptions = [
@@ -197,7 +221,7 @@ export default function DPCreateForm({
     setLoading(true)
 
     try {
-      await createDirectPurchase({
+      await updateDirectPurchase(initialData.id, {
         store_id: storeId,
         supplier_id: supplierId,
         purchase_date: purchaseDate,
@@ -210,10 +234,10 @@ export default function DPCreateForm({
         }))
       })
 
-      router.push('/dashboard/procurement/direct-purchase')
+      router.push(`/dashboard/procurement/direct-purchase/${initialData.id}`)
       router.refresh()
     } catch (err: any) {
-      setErrorMsg(err.message || 'Gagal menyimpan Pembelian Langsung.')
+      setErrorMsg(err.message || 'Gagal menyimpan perubahan Pembelian Langsung.')
       setLoading(false)
     }
   }
@@ -223,17 +247,17 @@ export default function DPCreateForm({
       {/* Page Header */}
       <div className="flex items-center gap-4">
         <Link
-          href="/dashboard/procurement/direct-purchase"
+          href={`/dashboard/procurement/direct-purchase/${initialData.id}`}
           className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-600 transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
-            Catat Pembelian Langsung (Spot Purchase)
+            Edit Pembelian Langsung
           </h1>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Catat pembelian fisik dari grosir/supplier untuk langsung dikirim ke toko cabang terpilih.
+            Ubah data pembelian yang masih dalam status Waiting Delivery.
           </p>
         </div>
       </div>
@@ -497,7 +521,7 @@ export default function DPCreateForm({
 
         <div className="flex justify-end gap-3">
           <Link
-            href="/dashboard/procurement/direct-purchase"
+            href={`/dashboard/procurement/direct-purchase/${initialData.id}`}
             className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
           >
             Batal
@@ -510,10 +534,10 @@ export default function DPCreateForm({
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Menyimpan Pembelian...</span>
+                <span>Menyimpan Perubahan...</span>
               </>
             ) : (
-              <span>Simpan Pembelian Langsung</span>
+              <span>Simpan Perubahan</span>
             )}
           </button>
         </div>
