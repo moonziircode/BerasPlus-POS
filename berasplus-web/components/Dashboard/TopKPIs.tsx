@@ -1,18 +1,19 @@
-'use client'
+
 import { ArrowUpRight, TrendingUp, ShoppingBag, Users, Package, AlertTriangle, Blend, Calculator } from 'lucide-react'
 
-export default function TopKPIs() {
+export default function TopKPIs({ metrics }: { metrics: any }) {
+  if (!metrics) return null;
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {/* 8 KPI Cards according to design */}
-      <KpiCard title="Penjualan Hari Ini" value="Rp 12.500.000" trend="+15% dari kemarin" icon={<TrendingUp />} bg="bg-slate-800" color="text-emerald-400" />
-      <KpiCard title="Profit Hari Ini" value="Rp 3.250.000" trend="Margin 26%" icon={<ArrowUpRight />} bg="bg-slate-800" color="text-emerald-400" />
-      <KpiCard title="Order" value="84" trend="+8% dari kemarin" icon={<ShoppingBag />} bg="bg-slate-800" color="text-blue-400" />
-      <KpiCard title="Customer" value="61" trend="18 Repeat" icon={<Users />} bg="bg-slate-800" color="text-orange-400" />
-      <KpiCard title="Nilai Persediaan" value="Rp 2.850.000.000" trend="" icon={<Package />} bg="bg-slate-800" color="text-purple-400" />
-      <KpiCard title="Stok Menipis" value="24 SKU" trend="" icon={<AlertTriangle />} bg="bg-rose-950/40" color="text-rose-400" border="border-rose-900/50" />
-      <KpiCard title="Batch Mixing" value="5 Batch" trend="" icon={<Blend />} bg="bg-slate-800" color="text-emerald-400" />
-      <KpiCard title="Estimasi HPP" value="Rp 11.820 /kg" trend="" icon={<Calculator />} bg="bg-slate-800" color="text-amber-400" />
+      <KpiCard title="Penjualan Hari Ini" value={`Rp ${metrics.penjualanHariIni.toLocaleString('id-ID')}`} trend={metrics.trends.penjualan} icon={<TrendingUp />} bg="bg-slate-800" color="text-emerald-400" />
+      <KpiCard title="Profit Hari Ini" value={`Rp ${metrics.profitHariIni.toLocaleString('id-ID')}`} trend={metrics.trends.profit} icon={<ArrowUpRight />} bg="bg-slate-800" color="text-emerald-400" />
+      <KpiCard title="Order" value={metrics.orderCount.toString()} trend={metrics.trends.order} icon={<ShoppingBag />} bg="bg-slate-800" color="text-blue-400" />
+      <KpiCard title="Customer" value={metrics.customerCount.toString()} trend={metrics.trends.customer} icon={<Users />} bg="bg-slate-800" color="text-orange-400" />
+      <KpiCard title="Nilai Persediaan" value={`Rp ${metrics.nilaiPersediaan.toLocaleString('id-ID')}`} trend="" icon={<Package />} bg="bg-slate-800" color="text-purple-400" />
+      <KpiCard title="Stok Menipis" value={`${metrics.lowStockCount} SKU`} trend="" icon={<AlertTriangle />} bg="bg-rose-950/40" color="text-rose-400" border="border-rose-900/50" />
+      <KpiCard title="Batch Mixing" value={`${metrics.batchCount} Batch`} trend="" icon={<Blend />} bg="bg-slate-800" color="text-emerald-400" />
+      <KpiCard title="Estimasi HPP" value="Live Calculation" trend="" icon={<Calculator />} bg="bg-slate-800" color="text-amber-400" />
     </div>
   )
 }

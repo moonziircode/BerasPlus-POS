@@ -2,19 +2,7 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChevronDown } from 'lucide-react';
 
-const data = [
-  { date: '23 Apr', sales: 5 },
-  { date: '26 Apr', sales: 9 },
-  { date: '30 Apr', sales: 7 },
-  { date: '3 Mei', sales: 11 },
-  { date: '7 Mei', sales: 13 },
-  { date: '10 Mei', sales: 10 },
-  { date: '14 Mei', sales: 14 },
-  { date: '17 Mei', sales: 12 },
-  { date: '21 Mei', sales: 15 },
-];
-
-export default function SalesChart() {
+export default function SalesChart({ data }: { data: any[] }) {
   return (
     <div className="p-5 rounded-2xl border border-slate-800 bg-slate-800/50 col-span-2">
       <div className="flex justify-between items-center mb-6">
