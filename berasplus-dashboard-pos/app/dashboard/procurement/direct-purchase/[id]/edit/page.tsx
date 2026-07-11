@@ -16,7 +16,7 @@ export default async function DPEditPage({ params }: { params: Promise<{ id: str
   const [storesRes, suppliersRes, rawRes, pkgRes, catRes] = await Promise.all([
     supabase.from('stores').select('id, name').order('name'),
     supabase.from('suppliers').select('id, name').order('name'),
-    supabase.from('raw_materials').select('id, name, rm_code, conversion_factor').eq('status', 'Active').order('name'),
+    supabase.from('raw_materials').select('id, name, rm_code, conversion_factor, base_unit').eq('status', 'Active').order('name'),
     supabase.from('packaging_materials').select('id, name, packaging_code').eq('status', 'Active').order('name'),
     supabase.from('categories').select('id, name').order('name'),
   ])
@@ -63,6 +63,11 @@ export default async function DPEditPage({ params }: { params: Promise<{ id: str
     }))
   }
 
+  // 4. Fetch conversion factors
+  const { data: conversionFactors } = await supabase
+    .from('conversion_factors')
+    .select('id, name, factor_to_kg')
+
   return (
     <div className="mx-auto max-w-7xl">
       <DPEditForm
@@ -71,6 +76,7 @@ export default async function DPEditPage({ params }: { params: Promise<{ id: str
         rawMaterials={rawRes.data || []}
         packagingMaterials={pkgRes.data || []}
         categories={catRes.data || []}
+        conversionFactors={conversionFactors || []}
         initialData={initialData}
       />
     </div>

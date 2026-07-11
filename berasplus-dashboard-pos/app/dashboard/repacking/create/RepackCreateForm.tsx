@@ -14,6 +14,7 @@ import {
   FileText 
 } from 'lucide-react'
 import { executeRepack } from '../actions'
+import { convertToKg } from '@/utils/conversion'
 
 interface StoreOption {
   id: string
@@ -63,9 +64,21 @@ export default function RepackCreateForm({
   const [storeId, setStoreId] = useState('')
   const [rawMaterialId, setRawMaterialId] = useState('')
   const [sellingProductId, setSellingProductId] = useState('')
-  const [quantityKg, setQuantityKg] = useState('')
+  const [quantityInput, setQuantityInput] = useState('')
   const [quantityPacks, setQuantityPacks] = useState('')
   const [notes, setNotes] = useState('')
+
+  // Find selected Raw Material
+  const selectedRm = useMemo(() => {
+    return rawMaterials.find((rm) => rm.id === rawMaterialId)
+  }, [rawMaterialId, rawMaterials])
+
+  // Convert input quantity to Kg based on base_unit
+  const quantityKg = useMemo(() => {
+    const qty = parseFloat(quantityInput) || 0
+    if (!selectedRm) return qty
+    return convertToKg(qty, selectedRm.base_unit || 'Kg', [])
+  }, [quantityInput, selectedRm])
 
   // 1. Get available stock for selected store & raw material
   const availableStock = useMemo(() => {
@@ -82,18 +95,18 @@ export default function RepackCreateForm({
     if (!rawMaterialId) return 'Pilih bahan sumber curah.'
     if (!sellingProductId) return 'Pilih produk retail hasil repacking.'
     
-    const kg = parseFloat(quantityKg)
+    const qty = parseFloat(quantityInput)
     const packs = parseInt(quantityPacks)
 
-    if (isNaN(kg) || kg <= 0) return 'Jumlah yang di-repack harus lebih dari 0 Kg.'
+    if (isNaN(qty) || qty <= 0) return 'Jumlah yang di-repack harus lebih dari 0.'
     if (isNaN(packs) || packs <= 0) return 'Jumlah kemasan yang dihasilkan harus lebih dari 0 pack.'
     
-    if (kg > availableStock) {
-      return `Stok tidak mencukupi. Tersedia: ${availableStock.toFixed(2)} Kg, diminta: ${kg.toFixed(2)} Kg.`
+    if (quantityKg > availableStock) {
+      return `Stok tidak mencukupi. Tersedia: ${availableStock.toFixed(2)} Kg, diminta: ${quantityKg.toFixed(2)} Kg.`
     }
 
     return ''
-  }, [storeId, rawMaterialId, sellingProductId, quantityKg, quantityPacks, availableStock])
+  }, [storeId, rawMaterialId, sellingProductId, quantityInput, quantityKg, quantityPacks, availableStock])
 
   // 3. Handle Submit
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,7 +121,7 @@ export default function RepackCreateForm({
         store_id: storeId,
         raw_material_id: rawMaterialId,
         selling_product_id: sellingProductId,
-        quantity_kg: parseFloat(quantityKg),
+        quantity_kg: quantityKg,
         quantity_packs: parseInt(quantityPacks),
         notes: notes || undefined,
       })
@@ -227,21 +240,26 @@ export default function RepackCreateForm({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Jumlah Repack (Kg) */}
+            {/* Jumlah Repack */}
             <div className="space-y-2">
               <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                Jumlah Bahan Baku Digunakan (Kg)
+                Jumlah Bahan Baku Digunakan ({selectedRm?.base_unit || 'Kg'})
               </label>
               <input
                 type="number"
                 step="any"
                 min="0.01"
                 placeholder="0.00"
-                value={quantityKg}
-                onChange={(e) => setQuantityKg(e.target.value)}
+                value={quantityInput}
+                onChange={(e) => setQuantityInput(e.target.value)}
                 required
                 className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition-all focus:border-emerald-600 focus:bg-white dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-emerald-500"
               />
+              {selectedRm && selectedRm.base_unit?.toLowerCase() !== 'kg' && selectedRm.base_unit?.toLowerCase() !== 'kilogram' && (
+                <div className="text-xs text-zinc-500 font-semibold mt-1 bg-zinc-50 dark:bg-zinc-800/35 p-2 rounded-lg inline-block">
+                  Setara dengan: <span className="font-mono text-emerald-600 dark:text-emerald-400">{quantityKg.toFixed(2)} Kg</span>
+                </div>
+              )}
             </div>
 
             {/* Hasil Kemasan (Pack) */}

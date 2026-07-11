@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Blend, Package, Scale, HelpCircle } from 'lucide-react'
+import { convertFromKg } from '@/utils/conversion'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,7 +56,7 @@ export default async function RecipeDetailPage({ params }: Props) {
       .from('recipe_version_inputs')
       .select(`
         quantity_kg,
-        raw_materials (name, rm_code)
+        raw_materials (name, rm_code, base_unit)
       `)
       .eq('recipe_version_id', recipe.active_version_id)
 
@@ -75,6 +76,11 @@ export default async function RecipeDetailPage({ params }: Props) {
       packaging = versionPkg
     }
   }
+
+  // 3. Fetch conversion factors
+  const { data: conversions } = await supabase
+    .from('conversion_factors')
+    .select('id, name, factor_to_kg')
 
   const targetProduct = (recipe as any).selling_products
 
@@ -130,15 +136,28 @@ export default async function RecipeDetailPage({ params }: Props) {
                       <td colSpan={3} className="px-4 py-8 text-center text-slate-500 italic">Tidak ada bahan baku untuk versi resep ini.</td>
                     </tr>
                   ) : (
-                    inputs.map((inp, idx) => (
-                      <tr key={idx} className="hover:bg-slate-800/20">
-                        <td className="px-4 py-3.5 pl-5 font-medium text-slate-200">{(inp.raw_materials as any)?.name}</td>
-                        <td className="px-4 py-3.5 font-mono text-slate-400">{(inp.raw_materials as any)?.rm_code}</td>
-                        <td className="px-4 py-3.5 text-right pr-5 font-mono font-semibold text-slate-100">
-                          {Number(inp.quantity_kg).toLocaleString('id-ID')} Kg
-                        </td>
-                      </tr>
-                    ))
+                    inputs.map((inp, idx) => {
+                      const baseUnit = (inp.raw_materials as any)?.base_unit || 'Kg'
+                      const quantityKg = Number(inp.quantity_kg)
+                      const needsConversion = baseUnit.toLowerCase() !== 'kg' && baseUnit.toLowerCase() !== 'kilogram'
+                      const convertedQty = needsConversion 
+                        ? convertFromKg(quantityKg, baseUnit, conversions || [])
+                        : quantityKg
+                      return (
+                        <tr key={idx} className="hover:bg-slate-800/20">
+                          <td className="px-4 py-3.5 pl-5 font-medium text-slate-200">{(inp.raw_materials as any)?.name}</td>
+                          <td className="px-4 py-3.5 font-mono text-slate-400">{(inp.raw_materials as any)?.rm_code}</td>
+                          <td className="px-4 py-3.5 text-right pr-5 font-mono font-semibold text-slate-100">
+                            <div>{quantityKg.toLocaleString('id-ID')} Kg</div>
+                            {needsConversion && (
+                              <span className="text-[10px] text-emerald-400 block font-normal mt-0.5">
+                                ({convertedQty.toLocaleString('id-ID', { maximumFractionDigits: 2 })} {baseUnit})
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })
                   )}
                 </tbody>
               </table>

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import { Menu, Bell, Search, LogOut, Loader2 } from 'lucide-react'
+import GlobalUnitConverter from './GlobalUnitConverter'
 
 interface TopbarProps {
   onMenuToggle: () => void
@@ -47,6 +48,9 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
 
       {/* Right side items */}
       <div className="flex items-center gap-4">
+        {/* Global Unit Converter */}
+        <GlobalUnitConverter />
+
         {/* Notification Icon */}
         <button className="relative rounded-lg p-2 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white">
           <Bell className="h-5 w-5" />

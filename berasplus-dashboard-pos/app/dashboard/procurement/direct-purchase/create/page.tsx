@@ -22,7 +22,7 @@ export default async function CreateDirectPurchasePage() {
   // 3. Fetch active raw materials
   const { data: rawMaterials } = await supabase
     .from('raw_materials')
-    .select('id, name, rm_code, conversion_factor')
+    .select('id, name, rm_code, conversion_factor, base_unit')
     .eq('status', 'Active')
     .order('name')
 
@@ -39,6 +39,11 @@ export default async function CreateDirectPurchasePage() {
     .select('id, name')
     .order('name')
 
+  // 6. Fetch conversion factors
+  const { data: conversionFactors } = await supabase
+    .from('conversion_factors')
+    .select('id, name, factor_to_kg')
+
   return (
     <DPCreateForm
       stores={stores || []}
@@ -46,6 +51,7 @@ export default async function CreateDirectPurchasePage() {
       rawMaterials={rawMaterials || []}
       packagingMaterials={packagingMaterials || []}
       categories={categories || []}
+      conversionFactors={conversionFactors || []}
     />
   )
 }

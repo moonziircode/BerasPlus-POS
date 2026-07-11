@@ -18,6 +18,7 @@ import Link from 'next/link'
 import { createDirectPurchase, createRawMaterialDP, createPackagingMaterialDP } from '../actions'
 import AddSupplierModal from './AddSupplierModal'
 import ItemCombobox from './ItemCombobox'
+import { convertToKg } from '@/utils/conversion'
 
 interface StoreOption {
   id: string
@@ -34,6 +35,7 @@ interface RawMaterialOption {
   name: string
   rm_code: string
   conversion_factor?: any
+  base_unit?: string
 }
 
 interface PackagingOption {
@@ -53,6 +55,7 @@ interface DPCreateFormProps {
   rawMaterials: RawMaterialOption[]
   packagingMaterials: PackagingOption[]
   categories: CategoryOption[]
+  conversionFactors: any[]
 }
 
 export default function DPCreateForm({
@@ -61,6 +64,7 @@ export default function DPCreateForm({
   rawMaterials,
   packagingMaterials,
   categories,
+  conversionFactors,
 }: DPCreateFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -98,7 +102,8 @@ export default function DPCreateForm({
       code: rm.rm_code,
       item_type: 'RAW_MATERIAL' as const,
       id: rm.id,
-      conversion_factor: parseFloat(rm.conversion_factor) || 1
+      conversion_factor: parseFloat(rm.conversion_factor) || 1,
+      base_unit: rm.base_unit || 'Kg'
     })),
     ...packagingMaterialOptions.map(pkg => ({
       key: `PACKAGING:${pkg.id}`,
@@ -106,7 +111,8 @@ export default function DPCreateForm({
       code: pkg.packaging_code,
       item_type: 'PACKAGING' as const,
       id: pkg.id,
-      conversion_factor: 0
+      conversion_factor: 0,
+      base_unit: 'Pcs'
     }))
   ]
 
@@ -366,8 +372,13 @@ export default function DPCreateForm({
               const price = parseFloat(row.price_per_unit) || 0
               const subtotal = qty * price
               const selectedOption = itemOptions.find(opt => opt.key === row.composite_key)
-              const conversion = selectedOption?.conversion_factor || 0
-              const totalKg = row.item_type === 'RAW_MATERIAL' ? (qty * conversion) : 0
+              const baseUnit = (selectedOption as any)?.base_unit || 'Kg'
+              const conversion = selectedOption?.conversion_factor || 1
+              const totalKg = row.item_type === 'RAW_MATERIAL'
+                ? (baseUnit.toLowerCase() !== 'kg' && baseUnit.toLowerCase() !== 'kilogram'
+                  ? convertToKg(qty, baseUnit, conversionFactors)
+                  : qty * conversion)
+                : 0
 
               return (
                 <div key={index} className="flex items-center gap-3">
