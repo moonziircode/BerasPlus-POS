@@ -12,7 +12,7 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-50 dark:bg-slate-900">
+    <div className="flex h-screen w-screen overflow-hidden bg-slate-50 dark:bg-black">
       {/* Sidebar (Left panel) */}
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 

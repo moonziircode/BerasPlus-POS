@@ -2,7 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Calendar, Store, User, FileText, CheckCircle, Clock, Truck } from 'lucide-react'
-import ReceiveDPGoodsButton from '../ReceiveDPGoodsButton'
+import ReceiveDPGoodsModal from '../ReceiveDPGoodsModal'
 
 export const dynamic = 'force-dynamic'
 
@@ -125,12 +125,21 @@ export default async function DirectPurchaseDetailPage({ params }: PageProps) {
         </Link>
 
         {isWaiting && (
-          <ReceiveDPGoodsButton
-            dpId={purchase.id}
-            storeId={purchase.store_id}
-            supplierName={supplierName}
-            purchaseDate={formatDate(purchase.purchase_date)}
-          />
+          <div className="flex gap-2">
+            <Link
+              href={`/dashboard/procurement/direct-purchase/${purchase.id}/edit`}
+              className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 shadow-sm transition-all hover:bg-zinc-50 active:scale-95 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              Edit Pembelian
+            </Link>
+            <ReceiveDPGoodsModal
+              dpId={purchase.id}
+              storeId={purchase.store_id}
+              supplierName={supplierName}
+              purchaseDate={formatDate(purchase.purchase_date)}
+              items={items || []}
+            />
+          </div>
         )}
       </div>
 

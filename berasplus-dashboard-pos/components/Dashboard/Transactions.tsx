@@ -1,7 +1,8 @@
 'use client'
 import { CheckCircle, ChevronRight } from 'lucide-react'
 
-export function RecentTransactions() {
+export function RecentTransactions({ transactions }: { transactions: any[] }) {
+  if (!transactions) return null;
   return (
     <div className="p-5 rounded-2xl border border-slate-800 bg-slate-800/50 col-span-full">
       <div className="flex justify-between items-center mb-6">
@@ -25,11 +26,13 @@ export function RecentTransactions() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/50">
-            <TrxRow time="11:30" id="TRX-250523-0082" type="Penjualan" cust="Pak Haji" prod="Ramos Bandung" qty="20 Kg" total="Rp 260.000" meth="QRIS" />
-            <TrxRow time="11:15" id="TRX-250523-0081" type="Penjualan" cust="Bu Ani" prod="Premium 13K" qty="10 Kg" total="Rp 135.000" meth="Tunai" />
-            <TrxRow time="10:45" id="TRX-250523-0080" type="Mixing" cust="-" prod="Ciranjang" qty="80 Kg" total="-" meth="-" />
-            <TrxRow time="10:20" id="TRX-250523-0079" type="Pembelian" cust="IR Ahmad" prod="Medium" qty="500 Kg" total="Rp 3.625.000" meth="Transfer" />
-            <TrxRow time="09:50" id="TRX-250523-0078" type="Penjualan" cust="Warung Padang" prod="Rumah Minang" qty="20 Kg" total="Rp 260.000" meth="QRIS" />
+            {transactions.length === 0 ? (
+              <tr><td colSpan={9} className="text-center py-4 text-slate-500">Belum ada transaksi</td></tr>
+            ) : (
+              transactions.map((trx, i) => (
+                <TrxRow key={i} {...trx} />
+              ))
+            )}
           </tbody>
         </table>
       </div>

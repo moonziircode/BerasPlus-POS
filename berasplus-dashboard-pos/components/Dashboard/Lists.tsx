@@ -1,7 +1,8 @@
 'use client'
 import { AlertTriangle, TrendingUp, TrendingDown, Minus, CheckCircle, Clock, ChevronDown, ChevronRight, PackageOpen } from 'lucide-react'
 
-export function StokMenipisWidget() {
+export function StokMenipisWidget({ alerts }: { alerts: any[] }) {
+  if (!alerts) return null;
   return (
     <div className="p-5 rounded-2xl border border-slate-800 bg-slate-800/50">
       <div className="flex justify-between items-center mb-6">
@@ -9,10 +10,13 @@ export function StokMenipisWidget() {
         <span className="text-xs text-emerald-400 cursor-pointer">Lihat Semua</span>
       </div>
       <div className="space-y-3">
-        <AlertItem name="Broken" pack="Sisa 40 Kg" alert="Estimasi habis" days="2 Hari" type="critical" />
-        <AlertItem name="Pandan Wangi" pack="Sisa 15 Kg" alert="" days="3 Hari" type="danger" />
-        <AlertItem name="Premium" pack="Sisa 60 Kg" alert="" days="4 Hari" type="warning" />
-        <AlertItem name="Ketan Putih" pack="Sisa 25 Kg" alert="" days="5 Hari" type="danger" />
+        {alerts.length === 0 ? (
+          <div className="text-center text-sm text-slate-500 py-4">Semua stok aman</div>
+        ) : (
+          alerts.map((a, i) => (
+            <AlertItem key={i} {...a} />
+          ))
+        )}
       </div>
     </div>
   )
@@ -37,7 +41,8 @@ function AlertItem({name, pack, alert, days, type}: any) {
   )
 }
 
-export function ProdukTerlaris() {
+export function ProdukTerlaris({ topProducts }: { topProducts: any[] }) {
+  if (!topProducts) return null;
   return (
     <div className="p-5 rounded-2xl border border-slate-800 bg-slate-800/50">
       <div className="flex justify-between items-center mb-4">
@@ -47,11 +52,13 @@ export function ProdukTerlaris() {
         </div>
       </div>
       <div className="space-y-4 mt-6">
-        <RankItem rank={1} name="Ramos Bandung" val="620 Kg" pct={90} />
-        <RankItem rank={2} name="Rumah Minang" val="520 Kg" pct={75} />
-        <RankItem rank={3} name="Premium 13K" val="410 Kg" pct={60} />
-        <RankItem rank={4} name="BMW" val="350 Kg" pct={50} />
-        <RankItem rank={5} name="Petrok" val="300 Kg" pct={40} />
+        {topProducts.length === 0 ? (
+          <div className="text-center text-sm text-slate-500 py-4">Belum ada data penjualan</div>
+        ) : (
+          topProducts.map((p, i) => (
+            <RankItem key={i} {...p} />
+          ))
+        )}
       </div>
       <button className="w-full mt-5 py-2 text-xs font-medium text-slate-300 bg-slate-900 rounded-lg border border-slate-700 hover:bg-slate-700">Lihat Semua Produk</button>
     </div>
@@ -137,7 +144,8 @@ export function MarginProduk() {
   )
 }
 
-export function MixingHariIni() {
+export function MixingHariIni({ todayMixing }: { todayMixing: any[] }) {
+  if (!todayMixing) return null;
   return (
     <div className="p-5 rounded-2xl border border-slate-800 bg-slate-800/50">
       <div className="flex justify-between items-center mb-6">
@@ -145,9 +153,13 @@ export function MixingHariIni() {
         <span className="text-[10px] flex items-center text-emerald-400 cursor-pointer">Lihat Semua <ChevronRight className="w-3 h-3" /></span>
       </div>
       <div className="space-y-4">
-        <MixItem id="#120" name="Rumah Minang" qty="120 Kg" status="Selesai" time="08:30" icon={<CheckCircle className="w-4 h-4 text-emerald-400" />} bg="bg-emerald-950/30 border-emerald-900/50" />
-        <MixItem id="#121" name="Ciranjang" qty="80 Kg" status="Proses" time="09:15" icon={<Clock className="w-4 h-4 text-amber-400" />} bg="bg-amber-950/30 border-amber-900/50" />
-        <MixItem id="#122" name="Ramos Bandung" qty="150 Kg" status="Menunggu" time="10:00" icon={<Clock className="w-4 h-4 text-blue-400" />} bg="bg-blue-950/30 border-blue-900/50" />
+        {todayMixing.length === 0 ? (
+          <div className="text-center text-sm text-slate-500 py-4">Belum ada mixing hari ini</div>
+        ) : (
+          todayMixing.map((m, i) => (
+            <MixItem key={i} {...m} icon={<CheckCircle className="w-4 h-4 text-emerald-400" />} bg="bg-emerald-950/30 border-emerald-900/50" />
+          ))
+        )}
       </div>
     </div>
   )

@@ -15,10 +15,9 @@ import {
   Calendar
 } from 'lucide-react'
 import Link from 'next/link'
-import { createDirectPurchase } from '../actions'
+import { createDirectPurchase, createRawMaterialDP, createPackagingMaterialDP } from '../actions'
 import AddSupplierModal from './AddSupplierModal'
-import AddRawMaterialDPModal from './AddRawMaterialDPModal'
-import AddPackagingDPModal from './AddPackagingDPModal'
+import ItemCombobox from './ItemCombobox'
 
 interface StoreOption {
   id: string
@@ -66,6 +65,7 @@ export default function DPCreateForm({
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+
 
   // Form Header States
   const [storeId, setStoreId] = useState('')
@@ -335,17 +335,7 @@ export default function DPCreateForm({
               <span>2. Daftar Item Pembelian</span>
             </h2>
             <div className="flex items-center gap-2">
-              <AddRawMaterialDPModal
-                categories={categories}
-                onRawMaterialAdded={(newRm) => {
-                  setRawMaterialOptions((prev) => [...prev, newRm])
-                }}
-              />
-              <AddPackagingDPModal
-                onPackagingAdded={(newPkg) => {
-                  setPackagingMaterialOptions((prev) => [...prev, newPkg])
-                }}
-              />
+
               <button
                 type="button"
                 onClick={addRow}
@@ -386,19 +376,41 @@ export default function DPCreateForm({
                   </span>
                   <div className="flex-1 grid gap-4 grid-cols-7">
                     <div className="col-span-2">
-                      <select
-                        required
+                      <ItemCombobox
+                        options={itemOptions}
                         value={row.composite_key}
-                        onChange={(e) => handleRowChange(index, 'composite_key', e.target.value)}
-                        className="block w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2 px-3 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-                      >
-                        <option value="" disabled>-- Pilih Item (Bahan / Kemasan) --</option>
-                        {itemOptions.map((opt) => (
-                          <option key={opt.key} value={opt.key}>
-                            {opt.name}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => handleRowChange(index, 'composite_key', val)}
+                        onAddNewRawMaterial={async (query) => {
+                          const defaultCategory = categories[0]?.id
+                          if (!defaultCategory) {
+                            alert('Harap buat Kategori master terlebih dahulu sebelum menambah bahan baku otomatis.')
+                            return
+                          }
+                          try {
+                            const newRm = await createRawMaterialDP({
+                              name: query,
+                              category_id: defaultCategory,
+                              conversion_factor: 50 // default
+                            })
+                            setRawMaterialOptions(prev => [...prev, newRm])
+                            handleRowChange(index, 'composite_key', `RAW_MATERIAL:${newRm.id}`)
+                          } catch (e: any) {
+                            alert(e.message || 'Gagal membuat bahan baku baru')
+                          }
+                        }}
+                        onAddNewPackaging={async (query) => {
+                          try {
+                            const newPkg = await createPackagingMaterialDP({
+                              name: query,
+                              buy_price_per_pcs: 0
+                            })
+                            setPackagingMaterialOptions(prev => [...prev, newPkg])
+                            handleRowChange(index, 'composite_key', `PACKAGING:${newPkg.id}`)
+                          } catch (e: any) {
+                            alert(e.message || 'Gagal membuat kemasan baru')
+                          }
+                        }}
+                      />
                     </div>
 
                     <div>

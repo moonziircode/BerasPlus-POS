@@ -6,10 +6,40 @@ import InventoryWidget from '@/components/Dashboard/InventoryWidget'
 import { StokMenipisWidget, ProdukTerlaris, SupplierIntelligence, MarginProduk, MixingHariIni } from '@/components/Dashboard/Lists'
 import { AiAssistant, DeliveryWidget, ForecastWidget } from '@/components/Dashboard/ExtraWidgets'
 import { RecentTransactions } from '@/components/Dashboard/Transactions'
+import { getDashboardMetrics, getRecentTransactions, getChartData, getLowStockAlerts, getTopProducts, getTodayMixing, getInventoryOverview } from './actions'
+import { createClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  let metrics = null
+  let transactions: any[] = []
+  let chartData: any[] = []
+  let lowStockAlerts: any[] = []
+  let topProducts: any[] = []
+  let todayMixing: any[] = []
+  let inventoryOverview: any = { rawMaterials: [], finishedGoods: [] }
+
+  if (user) {
+    const { data: userStore } = await supabase
+      .from('user_stores')
+      .select('store_id')
+      .eq('user_id', user.id)
+      .single()
+      
+    if (userStore) {
+      metrics = await getDashboardMetrics(userStore.store_id)
+      transactions = await getRecentTransactions(userStore.store_id)
+      chartData = await getChartData(userStore.store_id)
+      lowStockAlerts = await getLowStockAlerts(userStore.store_id)
+      topProducts = await getTopProducts(userStore.store_id)
+      todayMixing = await getTodayMixing(userStore.store_id)
+      inventoryOverview = await getInventoryOverview(userStore.store_id)
+    }
+  }
+
   return (
     <div className="space-y-6 pb-12 max-w-[1600px] mx-auto">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -29,29 +59,29 @@ export default function DashboardPage() {
       </div>
 
       {/* Row 1: Top KPIs */}
-      <TopKPIs />
+      <TopKPIs metrics={metrics} />
 
       {/* Row 2: Quick Actions */}
       <QuickActions />
 
       {/* Row 3: Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <SalesChart />
+        <SalesChart data={chartData} />
         <TargetRing />
       </div>
 
       {/* Row 4: Inventory & Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <InventoryWidget />
-        <StokMenipisWidget />
+        <InventoryWidget rawMaterials={inventoryOverview.rawMaterials} finishedGoods={inventoryOverview.finishedGoods} />
+        <StokMenipisWidget alerts={lowStockAlerts} />
       </div>
 
       {/* Row 5: Mini Lists (4 columns) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <ProdukTerlaris />
+        <ProdukTerlaris topProducts={topProducts} />
         <SupplierIntelligence />
         <MarginProduk />
-        <MixingHariIni />
+        <MixingHariIni todayMixing={todayMixing} />
       </div>
 
       {/* Row 6: AI, Delivery, Forecast */}
@@ -82,7 +112,7 @@ export default function DashboardPage() {
       {/* Row 7: Transactions */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <div className="lg:col-span-3">
-          <RecentTransactions />
+          <RecentTransactions transactions={transactions} />
         </div>
         <div>
           {/* We already rendered Financial Snapshot in ForecastWidget to save space, but let's make sure layout looks good */}

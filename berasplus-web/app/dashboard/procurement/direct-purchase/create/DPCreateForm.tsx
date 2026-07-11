@@ -15,10 +15,8 @@ import {
   Calendar
 } from 'lucide-react'
 import Link from 'next/link'
-import { createDirectPurchase } from '../actions'
+import { createDirectPurchase, createRawMaterialDP, createPackagingMaterialDP } from '../actions'
 import AddSupplierModal from './AddSupplierModal'
-import AddRawMaterialDPModal from './AddRawMaterialDPModal'
-import AddPackagingDPModal from './AddPackagingDPModal'
 import ItemCombobox from './ItemCombobox'
 
 interface StoreOption {
@@ -68,9 +66,6 @@ export default function DPCreateForm({
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
-  const [isRawMaterialModalOpen, setIsRawMaterialModalOpen] = useState(false)
-  const [isPackagingModalOpen, setIsPackagingModalOpen] = useState(false)
-  const [initialModalName, setInitialModalName] = useState('')
 
   // Form Header States
   const [storeId, setStoreId] = useState('')
@@ -340,25 +335,7 @@ export default function DPCreateForm({
               <span>2. Daftar Item Pembelian</span>
             </h2>
             <div className="flex items-center gap-2">
-              <div className="hidden">
-                <AddRawMaterialDPModal
-                  categories={categories}
-                  isOpen={isRawMaterialModalOpen}
-                  onClose={() => setIsRawMaterialModalOpen(false)}
-                  initialName={initialModalName}
-                  onRawMaterialAdded={(newRm) => {
-                    setRawMaterialOptions((prev) => [...prev, newRm])
-                  }}
-                />
-                <AddPackagingDPModal
-                  isOpen={isPackagingModalOpen}
-                  onClose={() => setIsPackagingModalOpen(false)}
-                  initialName={initialModalName}
-                  onPackagingAdded={(newPkg) => {
-                    setPackagingMaterialOptions((prev) => [...prev, newPkg])
-                  }}
-                />
-              </div>
+
               <button
                 type="button"
                 onClick={addRow}
@@ -403,13 +380,35 @@ export default function DPCreateForm({
                         options={itemOptions}
                         value={row.composite_key}
                         onChange={(val) => handleRowChange(index, 'composite_key', val)}
-                        onAddNewRawMaterial={(query) => {
-                          setInitialModalName(query)
-                          setIsRawMaterialModalOpen(true)
+                        onAddNewRawMaterial={async (query) => {
+                          const defaultCategory = categories[0]?.id
+                          if (!defaultCategory) {
+                            alert('Harap buat Kategori master terlebih dahulu sebelum menambah bahan baku otomatis.')
+                            return
+                          }
+                          try {
+                            const newRm = await createRawMaterialDP({
+                              name: query,
+                              category_id: defaultCategory,
+                              conversion_factor: 50 // default
+                            })
+                            setRawMaterialOptions(prev => [...prev, newRm])
+                            handleRowChange(index, 'composite_key', `RAW_MATERIAL:${newRm.id}`)
+                          } catch (e: any) {
+                            alert(e.message || 'Gagal membuat bahan baku baru')
+                          }
                         }}
-                        onAddNewPackaging={(query) => {
-                          setInitialModalName(query)
-                          setIsPackagingModalOpen(true)
+                        onAddNewPackaging={async (query) => {
+                          try {
+                            const newPkg = await createPackagingMaterialDP({
+                              name: query,
+                              buy_price_per_pcs: 0
+                            })
+                            setPackagingMaterialOptions(prev => [...prev, newPkg])
+                            handleRowChange(index, 'composite_key', `PACKAGING:${newPkg.id}`)
+                          } catch (e: any) {
+                            alert(e.message || 'Gagal membuat kemasan baru')
+                          }
                         }}
                       />
                     </div>

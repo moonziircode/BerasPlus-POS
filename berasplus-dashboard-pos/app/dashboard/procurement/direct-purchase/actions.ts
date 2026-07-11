@@ -114,7 +114,107 @@ export async function createDirectPurchase(formData: {
   return dpId
 }
 
-export async function receiveDPGoods(dpId: string, storeId: string) {
+export async function updateDirectPurchase(
+  dpId: string,
+  formData: {
+    store_id: string
+    supplier_id: string
+    purchase_date: string
+    notes?: string
+    items: DPItemInput[]
+  }
+) {
+  const supabase = await createClient()
+
+  if (formData.items.length === 0) {
+    throw new Error('Pembelian harus memiliki minimal 1 item.')
+  }
+
+  // Calculate total amount
+  const totalAmount = formData.items.reduce((sum, item) => {
+    return sum + (item.quantity * item.price_per_unit)
+  }, 0)
+
+  // 1. Update Direct Purchase Header
+  const { error: dpError } = await supabase
+    .from('direct_purchases')
+    .update({
+      store_id: formData.store_id,
+      supplier_id: formData.supplier_id,
+      purchase_date: formData.purchase_date,
+      total_amount: totalAmount,
+      notes: formData.notes || null,
+    })
+    .eq('id', dpId)
+    .eq('status', 'Waiting Delivery') // Ensure it can only be updated if Waiting Delivery
+
+  if (dpError) {
+    throw new Error(`Gagal memperbarui pembelian: ${dpError.message}`)
+  }
+
+  // 2. Fetch conversion factors for raw materials to calculate total_kg
+  const rawMaterialIds = formData.items
+    .filter((item) => item.item_type === 'RAW_MATERIAL')
+    .map((item) => item.item_id)
+
+  let conversionMap: Record<string, number> = {}
+  if (rawMaterialIds.length > 0) {
+    const { data: rawMaterials, error: rmError } = await supabase
+      .from('raw_materials')
+      .select('id, conversion_factor')
+      .in('id', rawMaterialIds)
+
+    if (rmError) {
+      throw new Error(`Gagal mengambil data konversi bahan baku: ${rmError.message}`)
+    }
+
+    rawMaterials?.forEach((rm) => {
+      conversionMap[rm.id] = parseFloat(rm.conversion_factor) || 1
+    })
+  }
+
+  // 3. Delete existing items
+  const { error: deleteError } = await supabase
+    .from('direct_purchase_items')
+    .delete()
+    .eq('dp_id', dpId)
+
+  if (deleteError) {
+    throw new Error(`Gagal menghapus item pembelian lama: ${deleteError.message}`)
+  }
+
+  // 4. Insert new items
+  const itemsInsert = formData.items.map((item) => {
+    const isRaw = item.item_type === 'RAW_MATERIAL'
+    const conversion = isRaw ? (conversionMap[item.item_id] || 1) : 0
+    return {
+      dp_id: dpId,
+      raw_material_id: isRaw ? item.item_id : null,
+      packaging_material_id: item.item_type === 'PACKAGING' ? item.item_id : null,
+      quantity: item.quantity,
+      price_per_unit: item.price_per_unit,
+      subtotal: item.quantity * item.price_per_unit,
+      total_kg: isRaw ? (item.quantity * conversion) : null,
+    }
+  })
+
+  const { error: itemsError } = await supabase
+    .from('direct_purchase_items')
+    .insert(itemsInsert)
+
+  if (itemsError) {
+    throw new Error(`Gagal menyimpan item pembelian baru: ${itemsError.message}`)
+  }
+
+  revalidatePath('/dashboard/procurement/direct-purchase')
+  revalidatePath(`/dashboard/procurement/direct-purchase/${dpId}`)
+}
+
+export async function receiveDPGoods(
+  dpId: string, 
+  storeId: string,
+  actuals: { id: string; actualQty: number; actualTotalKg: number | null }[]
+) {
   const supabase = await createClient()
 
   // 1. Fetch the corresponding inventory location for this store of type 'STORE'
@@ -141,19 +241,42 @@ export async function receiveDPGoods(dpId: string, storeId: string) {
     throw new Error('Gagal memproses penerimaan: Item pembelian tidak ditemukan.')
   }
 
+  if (actuals.length !== dpItems.length) {
+    throw new Error('Data aktual tidak sesuai dengan jumlah item pesanan.')
+  }
+
   // 3. Process each item movement sequentially
   for (const item of dpItems) {
+    const actual = actuals.find(a => a.id === item.id)
+    if (!actual) throw new Error('Data aktual tidak lengkap untuk item tertentu.')
+
     const isRaw = item.raw_material_id !== null
     const productId = isRaw ? item.raw_material_id : item.packaging_material_id
     const productType = isRaw ? 'RAW_MATERIAL' : 'PACKAGING'
 
-    let quantityKg = parseFloat(item.quantity)
+    let quantityKg = actual.actualQty
     let hppAtTime = parseFloat(item.price_per_unit)
 
-    // For Raw Materials, use total_kg directly from DB
+    // For Raw Materials, use actualTotalKg and calculate new HPP
     if (isRaw) {
-      quantityKg = parseFloat(item.total_kg) || 0
+      quantityKg = actual.actualTotalKg || 0
       hppAtTime = quantityKg > 0 ? (parseFloat(item.subtotal) / quantityKg) : 0
+    }
+
+    const shrinkageKg = isRaw ? (parseFloat(item.total_kg || 0) - quantityKg) : 0
+
+    // Update actual values to direct_purchase_items
+    const { error: updateError } = await supabase
+      .from('direct_purchase_items')
+      .update({
+        actual_quantity: actual.actualQty,
+        actual_total_kg: actual.actualTotalKg,
+        shrinkage_kg: shrinkageKg
+      })
+      .eq('id', item.id)
+
+    if (updateError) {
+      throw new Error(`Gagal memperbarui nilai aktual: ${updateError.message}`)
     }
 
     // Call process_inventory_movement RPC
