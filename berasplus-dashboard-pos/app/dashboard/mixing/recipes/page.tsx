@@ -85,9 +85,12 @@ export default async function RecipesPage() {
                           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
                             <Blend className="h-4 w-4" />
                           </div>
-                          <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                          <Link 
+                            href={`/dashboard/mixing/recipes/${recipe.id}`}
+                            className="font-semibold text-zinc-900 dark:text-zinc-100 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                          >
                             {recipe.name}
-                          </span>
+                          </Link>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -112,10 +115,13 @@ export default async function RecipesPage() {
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-right">
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Link 
+                          href={`/dashboard/mixing/recipes/${recipe.id}`}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
                           <span>Lihat Detail</span>
                           <ArrowRight className="h-3 w-3" />
-                        </span>
+                        </Link>
                       </td>
                     </tr>
                   )

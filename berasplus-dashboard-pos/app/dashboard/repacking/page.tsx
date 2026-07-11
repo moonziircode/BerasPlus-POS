@@ -122,7 +122,9 @@ export default async function RepackingPage() {
                       : (outputItem.selling_products as any).sku
                     : ''
 
-                  const packsCount = outputItem ? parseFloat(outputItem.quantity_pcs) : 0
+                  const packsCount = outputItem && outputItem.quantity_pcs ? Number(outputItem.quantity_pcs) : 0
+                  const inputWeight = batch.total_input_weight_kg ? Number(batch.total_input_weight_kg) : 0
+                  const lossPct = batch.loss_percentage ? Number(batch.loss_percentage) : 0
 
                   return (
                     <tr
@@ -147,7 +149,7 @@ export default async function RepackingPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 font-semibold text-zinc-900 dark:text-zinc-100">
-                        {parseFloat(batch.total_input_weight_kg).toFixed(2)} Kg
+                        {inputWeight.toFixed(2)} Kg
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center rounded-lg bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
@@ -157,13 +159,13 @@ export default async function RepackingPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1.5">
                           <span className={`font-semibold ${
-                            parseFloat(batch.loss_percentage) > 2
+                            lossPct > 2
                               ? 'text-amber-600 dark:text-amber-400'
                               : 'text-zinc-600 dark:text-zinc-400'
                           }`}>
-                            {parseFloat(batch.loss_percentage).toFixed(2)}%
+                            {lossPct.toFixed(2)}%
                           </span>
-                          {parseFloat(batch.loss_percentage) > 2 && (
+                          {lossPct > 2 && (
                             <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                           )}
                         </div>

@@ -250,10 +250,10 @@ export default function DPEditForm({
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-50 font-sans">
             Edit Pembelian Langsung
           </h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mt-1 text-sm text-slate-400 font-sans">
             Ubah data pembelian yang masih dalam status Waiting Delivery.
           </p>
         </div>

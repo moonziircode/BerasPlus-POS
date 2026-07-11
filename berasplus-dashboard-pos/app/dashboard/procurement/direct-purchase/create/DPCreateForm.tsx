@@ -224,10 +224,10 @@ export default function DPCreateForm({
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-50 font-sans">
             Catat Pembelian Langsung (Spot Purchase)
           </h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mt-1 text-sm text-slate-400 font-sans">
             Catat pembelian fisik dari grosir/supplier untuk langsung dikirim ke toko cabang terpilih.
           </p>
         </div>
