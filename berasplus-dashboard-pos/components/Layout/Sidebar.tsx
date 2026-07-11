@@ -41,7 +41,6 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-  { name: 'Sales', icon: ShoppingCart, path: '/dashboard/sales' },
   { 
     name: 'Procurement', 
     icon: Truck, 
