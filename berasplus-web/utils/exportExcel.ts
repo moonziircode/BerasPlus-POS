@@ -7,14 +7,14 @@ export function exportToExcel(data: any, startDate: string, endDate: string) {
 
   // 1. Sales Sheet
   const salesData = data.sales.map((s: any) => ({
-    'Waktu Transaksi': format(new Date(s.transaction_date), 'dd MMM yyyy HH:mm', { locale: id }),
-    'No. Transaksi': s.transaction_id,
-    'Tipe Pelanggan': s.customer_type,
+    'Waktu Transaksi': format(new Date(s.created_at), 'dd MMM yyyy HH:mm', { locale: id }),
+    'No. Transaksi': s.transaction_number || '-',
+    'Tipe Pelanggan': s.customer_id ? 'Member' : 'Umum',
     'Nama Pelanggan': s.customer_name || '-',
-    'Total Pembelian': s.total_amount,
-    'Metode Pembayaran': s.payment_method,
-    'Status Pembayaran': s.payment_status,
-    'Kasir': s.cashier_name || s.user_id,
+    'Total Pembelian': s.total,
+    'Metode Pembayaran': s.payment_method || '-',
+    'Status Pembayaran': s.status,
+    'Kasir': s.cashier_id,
   }))
   const wsSales = XLSX.utils.json_to_sheet(salesData)
   XLSX.utils.book_append_sheet(wb, wsSales, 'Penjualan')

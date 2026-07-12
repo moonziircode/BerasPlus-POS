@@ -13,9 +13,9 @@ export async function fetchExportData(startDate: string, endDate: string) {
         *,
         items:sales_transaction_items(*)
       `)
-      .gte('transaction_date', startDate)
-      .lte('transaction_date', endDate + ' 23:59:59')
-      .order('transaction_date', { ascending: true })
+      .gte('created_at', startDate)
+      .lte('created_at', endDate + ' 23:59:59')
+      .order('created_at', { ascending: true })
 
     // 2. Procurements
     const { data: procurements, error: procError } = await supabase

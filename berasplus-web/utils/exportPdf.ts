@@ -27,12 +27,12 @@ export function exportToPdf(data: any, startDate: string, endDate: string) {
   doc.text('1. Laporan Penjualan', 14, currentY)
   
   const salesRows = data.sales.map((s: any) => [
-    format(new Date(s.transaction_date), 'dd/MM/yy HH:mm'),
-    s.transaction_id.substring(0, 8) + '...',
-    s.customer_name || s.customer_type,
-    formatRp(s.total_amount),
-    s.payment_method,
-    s.payment_status
+    format(new Date(s.created_at), 'dd/MM/yy HH:mm'),
+    (s.transaction_number || '-').substring(0, 8) + '...',
+    s.customer_name || (s.customer_id ? 'Member' : 'Umum'),
+    formatRp(s.total),
+    s.payment_method || '-',
+    s.status
   ])
   
   autoTable(doc, {
