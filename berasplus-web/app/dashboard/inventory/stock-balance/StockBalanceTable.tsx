@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Search, Filter, Box, ShieldAlert, Store, Package } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Search, Filter, Box, ShieldAlert, Store, Package, PackageOpen } from 'lucide-react'
 
 interface StockBalance {
   location_id: string
@@ -12,6 +13,8 @@ interface StockBalance {
   product_name: string
   product_code: string
   current_stock_kg: string | number
+  unit_weight_kg?: number
+  price?: number
 }
 
 interface StockBalanceTableProps {
@@ -19,6 +22,7 @@ interface StockBalanceTableProps {
 }
 
 export default function StockBalanceTable({ balances }: StockBalanceTableProps) {
+  const router = useRouter()
   const [search, setSearch] = useState('')
   const [locationFilter, setLocationFilter] = useState('ALL')
   const [typeFilter, setTypeFilter] = useState('ALL')
@@ -59,6 +63,14 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
     })
   }, [balances, search, locationFilter, typeFilter, hideZero])
 
+  const formatRupiah = (val: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(val)
+  }
+
   return (
     <div className="space-y-6 font-sans">
       {/* Search & Filter Bar */}
@@ -74,7 +86,7 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
             </div>
             <input
               type="text"
-              placeholder="Contoh: Ramos, RM-001, SKU-5KG..."
+              placeholder="Contoh: Ramos, RM-001..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="block w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-3.5 text-sm text-zinc-900 placeholder-zinc-400 transition-all focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-850 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:border-emerald-500 dark:focus:bg-zinc-900"
@@ -114,7 +126,6 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
             <option value="ALL">Semua Tipe</option>
             <option value="RAW_MATERIAL">Bahan Baku (Raw Material)</option>
             <option value="PACKAGING">Kemasan (Packaging)</option>
-            <option value="SELLING_PRODUCT">Produk Jual (SKU)</option>
           </select>
         </div>
 
@@ -144,32 +155,39 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
                   <th scope="col" className="px-6 py-4">Tipe</th>
                   <th scope="col" className="px-6 py-4">Kode Produk</th>
                   <th scope="col" className="px-6 py-4">Nama Produk</th>
-                  <th scope="col" className="px-6 py-4 text-right">Sisa Stok</th>
+                  <th scope="col" className="px-6 py-4 text-right">Harga / HPP</th>
+                  <th scope="col" className="px-6 py-4 text-right">Sisa Stok (Kg)</th>
+                  <th scope="col" className="px-6 py-4 text-right">Qty</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                {filteredBalances.map((item, index) => {
+                {filteredBalances.map((item) => {
                   const stock = parseFloat(item.current_stock_kg as string) || 0
                   
-                  // Color codes for product types
                   let typeLabel = 'Bahan Baku'
                   let typeClass = 'bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/30'
-                  let unit = 'Kg'
+                  let Icon = PackageOpen
+                  let qtyStr = ''
+                  let stockStr = ''
 
                   if (item.product_type === 'PACKAGING') {
                     typeLabel = 'Kemasan'
                     typeClass = 'bg-blue-50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/30'
-                    unit = 'Pcs'
-                  } else if (item.product_type === 'SELLING_PRODUCT') {
-                    typeLabel = 'Produk Jual (SKU)'
-                    typeClass = 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/30'
-                    unit = 'Kg'
+                    Icon = Box
+                    stockStr = '-'
+                    qtyStr = `${stock.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} Pcs`
+                  } else {
+                    const unitW = item.unit_weight_kg || 1
+                    const qty = Math.floor(stock / unitW)
+                    stockStr = `${stock.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} Kg`
+                    qtyStr = `${qty.toLocaleString('id-ID')} Karung`
                   }
 
                   return (
                     <tr
                       key={`${item.location_id}-${item.product_type}-${item.product_id}`}
-                      className="group transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30"
+                      onClick={() => router.push(`/dashboard/inventory/stock-balance/${item.product_type.toLowerCase()}/${item.product_id}`)}
+                      className="group transition-colors hover:bg-zinc-50/50 cursor-pointer dark:hover:bg-zinc-800/30"
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
@@ -188,12 +206,23 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
                         {item.product_code || '-'}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-semibold text-zinc-950 dark:text-zinc-50">
-                          {item.product_name}
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <span className="font-semibold text-zinc-950 dark:text-zinc-50 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                            {item.product_name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-right font-medium text-zinc-500 dark:text-zinc-400">
+                        {formatRupiah(item.price || 0)}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-right font-medium text-zinc-500 dark:text-zinc-400">
+                        {stockStr}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-right font-semibold font-mono text-zinc-900 dark:text-zinc-100">
-                        {stock.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {unit}
+                        {qtyStr}
                       </td>
                     </tr>
                   )

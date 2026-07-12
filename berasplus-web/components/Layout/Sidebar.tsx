@@ -56,10 +56,8 @@ const menuItems: MenuItem[] = [
     icon: Package, 
     path: '/dashboard/inventory',
     subItems: [
-      { name: 'Bahan Baku', path: '/dashboard/inventory/raw-materials', icon: PackageOpen },
-      { name: 'Kemasan', path: '/dashboard/inventory/packaging', icon: Box },
+      { name: 'Sisa Saldo Stok', path: '/dashboard/inventory/stock-balance', icon: Scale },
       { name: 'Produk Jual', path: '/dashboard/inventory/selling-products', icon: ShoppingBag },
-      { name: 'Sisa Stok', path: '/dashboard/inventory/stock-balance', icon: Scale },
     ]
   },
   { 
