@@ -178,7 +178,6 @@ export default function ReceiveDPGoodsModal({
                     <thead>
                       <tr className="border-b border-zinc-200 dark:border-zinc-800 text-zinc-400 text-xs font-bold uppercase tracking-wider">
                         <th className="py-3 px-4">Nama Item</th>
-                        <th className="py-3 px-4 text-center">Tipe</th>
                         <th className="py-3 px-4 text-right">Qty Dipesan</th>
                         <th className="py-3 px-4 text-center">Berat Satuan</th>
                         <th className="py-3 px-4">Aktual Qty Diterima</th>
@@ -192,9 +191,7 @@ export default function ReceiveDPGoodsModal({
                           ? Array.isArray(item.raw_materials) ? item.raw_materials[0]?.name : (item.raw_materials as any).name
                           : Array.isArray(item.packaging_materials) ? item.packaging_materials[0]?.name : (item.packaging_materials as any).name
                         
-                        const unit = isRaw
-                          ? Array.isArray(item.raw_materials) ? item.raw_materials[0]?.base_unit : (item.raw_materials as any).base_unit
-                          : 'Pcs'
+                        const unitLabel = isRaw ? 'Karung' : 'Pcs'
 
                         const state = actuals[item.id]
                         const orderedQty = parseFloat(item.quantity)
@@ -205,15 +202,8 @@ export default function ReceiveDPGoodsModal({
                         return (
                           <tr key={item.id} className="text-zinc-900 dark:text-zinc-100 align-top">
                             <td className="py-4 px-4 font-semibold text-sm max-w-xs">{name}</td>
-                            <td className="py-4 px-4 text-center">
-                              {isRaw ? (
-                                <span className="inline-flex rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-600 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950 dark:text-emerald-400">Bahan Baku</span>
-                              ) : (
-                                <span className="inline-flex rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-600 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-950 dark:text-amber-400">Kemasan</span>
-                              )}
-                            </td>
                             <td className="py-4 px-4 text-right font-medium text-zinc-550 dark:text-zinc-400 font-mono">
-                              {orderedQty} {unit}
+                              {orderedQty} {unitLabel}
                             </td>
                             <td className="py-4 px-4 text-center font-medium text-zinc-550 dark:text-zinc-400 font-mono">
                               {isRaw && unitWeight > 0 ? `${unitWeight} Kg` : '-'}
@@ -229,7 +219,7 @@ export default function ReceiveDPGoodsModal({
                                     onChange={(e) => handleActualChange(item.id, 'actualQty', e.target.value)}
                                     className="block w-28 rounded-lg border border-zinc-200 bg-white py-1.5 px-3 text-sm text-zinc-900 transition-all focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
                                   />
-                                  <span className="text-xs text-zinc-500 font-semibold">{unit}</span>
+                                  <span className="text-xs text-zinc-500 font-semibold">{unitLabel}</span>
                                 </div>
                                 <button
                                   type="button"
