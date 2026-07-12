@@ -138,16 +138,13 @@ export default function DPCreateForm({
     
     if (field === 'composite_key') {
       const [type, id] = value.split(':')
-      const opt = itemOptions.find(o => o.key === value)
-      const conv = opt?.conversion_factor || 50
-      const qty = parseFloat(updated[index].quantity) || 0
       updated[index] = {
         ...updated[index],
         composite_key: value,
         item_type: type as any,
         item_id: id,
-        unit_weight_kg: type === 'RAW_MATERIAL' ? conv.toString() : '',
-        total_kg: type === 'RAW_MATERIAL' ? (qty * conv).toString() : ''
+        unit_weight_kg: '',
+        total_kg: ''
       }
     } else if (field === 'quantity') {
       const qty = parseFloat(value) || 0
@@ -155,7 +152,7 @@ export default function DPCreateForm({
       updated[index] = {
         ...updated[index],
         quantity: value,
-        total_kg: updated[index].item_type === 'RAW_MATERIAL' ? (qty * unitWt).toString() : ''
+        total_kg: unitWt > 0 ? (qty * unitWt).toString() : ''
       }
     } else if (field === 'unit_weight_kg') {
       const qty = parseFloat(updated[index].quantity) || 0
@@ -163,7 +160,7 @@ export default function DPCreateForm({
       updated[index] = {
         ...updated[index],
         unit_weight_kg: value,
-        total_kg: updated[index].item_type === 'RAW_MATERIAL' ? (qty * unitWt).toString() : ''
+        total_kg: unitWt > 0 ? (qty * unitWt).toString() : ''
       }
     } else {
       updated[index] = {
@@ -238,7 +235,7 @@ export default function DPCreateForm({
           item_type: row.item_type as 'RAW_MATERIAL' | 'PACKAGING',
           item_id: row.item_id,
           quantity: parseFloat(row.quantity),
-          unit_weight_kg: row.item_type === 'RAW_MATERIAL' ? parseFloat(row.unit_weight_kg) : undefined,
+          unit_weight_kg: row.unit_weight_kg ? parseFloat(row.unit_weight_kg) : undefined,
           price_per_unit: parseFloat(row.price_per_unit),
         }))
       })
@@ -464,12 +461,10 @@ export default function DPCreateForm({
                       <input
                         type="number"
                         step="any"
-                        disabled={row.item_type !== 'RAW_MATERIAL'}
-                        required={row.item_type === 'RAW_MATERIAL'}
                         placeholder="Berat Satuan (Kg)"
                         value={row.unit_weight_kg}
                         onChange={(e) => handleRowChange(index, 'unit_weight_kg', e.target.value)}
-                        className="block w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2 px-3 text-sm text-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:disabled:bg-zinc-850 dark:disabled:text-zinc-500"
+                        className="block w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2 px-3 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
                       />
                     </div>
 
