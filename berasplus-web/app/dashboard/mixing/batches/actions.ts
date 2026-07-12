@@ -15,9 +15,10 @@ interface PackagingItem {
 
 export async function executeProduction(formData: {
   store_id: string
-  recipe_id: string
+  recipe_id: string | null
   batch_number: string
   notes?: string
+  toleransi_susut_pct?: number
   output_item: {
     selling_product_id: string
     quantity: number
@@ -103,6 +104,7 @@ export async function executeProduction(formData: {
     batch_number: formData.batch_number,
     notes: formData.notes || null,
     created_by: user.id,
+    toleransi_susut_pct: formData.toleransi_susut_pct || 0,
     output_item: {
       selling_product_id: formData.output_item.selling_product_id,
       quantity_produced: formData.output_item.quantity,

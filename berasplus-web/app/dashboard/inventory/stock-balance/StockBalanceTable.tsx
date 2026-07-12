@@ -27,6 +27,7 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
   const [locationFilter, setLocationFilter] = useState('ALL')
   const [typeFilter, setTypeFilter] = useState('ALL')
   const [hideZero, setHideZero] = useState(true)
+  const [sortOption, setSortOption] = useState('NAME_ASC')
 
   // 1. Get unique locations for filter options
   const locations = useMemo(() => {
@@ -37,13 +38,13 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
     return Array.from(unique.entries()).map(([id, name]) => ({ id, name }))
   }, [balances])
 
-  // 2. Filter logic
-  const filteredBalances = useMemo(() => {
-    return balances.filter((item) => {
+  // 2. Filter & Sort logic
+  const filteredAndSortedBalances = useMemo(() => {
+    let result = balances.filter((item) => {
       const stock = parseFloat(item.current_stock_kg as string) || 0
       
       // Zero Stock Filter
-      if (hideZero && stock === 0) return false
+      if (hideZero && stock <= 0) return false
 
       // Location Filter
       if (locationFilter !== 'ALL' && item.location_id !== locationFilter) return false
@@ -61,7 +62,36 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
 
       return true
     })
-  }, [balances, search, locationFilter, typeFilter, hideZero])
+
+    // Sorting
+    result.sort((a, b) => {
+      const stockA = parseFloat(a.current_stock_kg as string) || 0
+      const stockB = parseFloat(b.current_stock_kg as string) || 0
+      const nameA = (a.product_name || '').toLowerCase()
+      const nameB = (b.product_name || '').toLowerCase()
+      const priceA = a.price || 0
+      const priceB = b.price || 0
+
+      switch (sortOption) {
+        case 'STOCK_DESC':
+          return stockB - stockA
+        case 'STOCK_ASC':
+          return stockA - stockB
+        case 'NAME_ASC':
+          return nameA.localeCompare(nameB)
+        case 'NAME_DESC':
+          return nameB.localeCompare(nameA)
+        case 'PRICE_DESC':
+          return priceB - priceA
+        case 'PRICE_ASC':
+          return priceA - priceB
+        default:
+          return 0
+      }
+    })
+
+    return result
+  }, [balances, search, locationFilter, typeFilter, hideZero, sortOption])
 
   const formatRupiah = (val: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -129,6 +159,25 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
           </select>
         </div>
 
+        {/* Sort Options */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            Urutkan
+          </label>
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="block w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 px-3 text-sm text-zinc-900 focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-850 dark:text-zinc-50 dark:focus:border-emerald-500 dark:focus:bg-zinc-900"
+          >
+            <option value="STOCK_DESC">Stok Terbanyak</option>
+            <option value="STOCK_ASC">Stok Tersedikit</option>
+            <option value="NAME_ASC">Nama A-Z</option>
+            <option value="NAME_DESC">Nama Z-A</option>
+            <option value="PRICE_DESC">Harga Tertinggi</option>
+            <option value="PRICE_ASC">Harga Terendah</option>
+          </select>
+        </div>
+
         {/* Checkbox: Hide Zero Stocks */}
         <div className="sm:col-span-4 flex items-center gap-2 mt-2">
           <input
@@ -147,21 +196,21 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
       {/* Stock Balance Table */}
       <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <div className="overflow-x-auto">
-          {filteredBalances.length > 0 ? (
+          {filteredAndSortedBalances.length > 0 ? (
             <table className="w-full border-collapse text-left text-sm text-zinc-600 dark:text-zinc-400">
               <thead className="border-b border-zinc-200 bg-zinc-50 font-semibold text-zinc-700 dark:border-zinc-800 dark:bg-zinc-800/50 dark:text-zinc-300">
                 <tr>
-                  <th scope="col" className="px-6 py-4">Lokasi</th>
-                  <th scope="col" className="px-6 py-4">Tipe</th>
                   <th scope="col" className="px-6 py-4">Kode Produk</th>
                   <th scope="col" className="px-6 py-4">Nama Produk</th>
+                  <th scope="col" className="px-6 py-4">Tipe</th>
                   <th scope="col" className="px-6 py-4 text-right">Harga / HPP</th>
+                  <th scope="col" className="px-6 py-4">Lokasi</th>
                   <th scope="col" className="px-6 py-4 text-right">Sisa Stok (Kg)</th>
                   <th scope="col" className="px-6 py-4 text-right">Qty</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                {filteredBalances.map((item) => {
+                {filteredAndSortedBalances.map((item) => {
                   const stock = parseFloat(item.current_stock_kg as string) || 0
                   
                   let typeLabel = 'Bahan Baku'
@@ -189,19 +238,6 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
                       onClick={() => router.push(`/dashboard/inventory/stock-balance/${item.product_type.toLowerCase()}/${item.product_id}`)}
                       className="group transition-colors hover:bg-zinc-50/50 cursor-pointer dark:hover:bg-zinc-800/30"
                     >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <Store className="h-4 w-4 text-zinc-400" />
-                          <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                            {item.location_name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${typeClass}`}>
-                          {typeLabel}
-                        </span>
-                      </td>
                       <td className="whitespace-nowrap px-6 py-4 font-mono text-xs font-semibold text-zinc-900 dark:text-zinc-100">
                         {item.product_code || '-'}
                       </td>
@@ -215,8 +251,21 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
                           </span>
                         </div>
                       </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${typeClass}`}>
+                          {typeLabel}
+                        </span>
+                      </td>
                       <td className="whitespace-nowrap px-6 py-4 text-right font-medium text-zinc-500 dark:text-zinc-400">
                         {formatRupiah(item.price || 0)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Store className="h-4 w-4 text-zinc-400" />
+                          <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                            {item.location_name}
+                          </span>
+                        </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-right font-medium text-zinc-500 dark:text-zinc-400">
                         {stockStr}

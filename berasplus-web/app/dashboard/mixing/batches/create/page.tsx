@@ -13,64 +13,38 @@ export default async function CreateProductionBatchPage() {
     .eq('status', 'Active')
     .order('name')
 
-  // 2. Fetch recipes
-  const { data: recipesData } = await supabase
-    .from('recipes')
-    .select(`
-      id,
-      recipe_code,
-      name,
-      standard_loss_pct,
-      target_product_id,
-      selling_products:target_product_id (
-        id,
-        name,
-        sku
-      )
-    `)
+  // 2. Fetch active selling products (Target SKU)
+  const { data: sellingProductsData } = await supabase
+    .from('selling_products')
+    .select('id, sku, name, unit_weight_kg')
+    .eq('status', 'Active')
     .order('name')
 
-  // 3. Fetch active recipe versions with nested inputs and packaging
-  const { data: activeVersions } = await supabase
-    .from('recipe_versions')
-    .select(`
-      id,
-      recipe_id,
-      version_number,
-      recipe_version_inputs (
-        id,
-        raw_material_id,
-        quantity_kg,
-        raw_materials:raw_material_id (
-          id,
-          name,
-          rm_code
-        )
-      ),
-      recipe_version_packaging (
-        id,
-        packaging_material_id,
-        quantity,
-        packaging_materials:packaging_material_id (
-          id,
-          name,
-          packaging_code,
-          buy_price_per_pcs
-        )
-      )
-    `)
-    .eq('is_active', true)
+  // 3. Fetch active raw materials
+  const { data: rawMaterialsData } = await supabase
+    .from('raw_materials')
+    .select('id, rm_code, name')
+    .eq('status', 'Active')
+    .order('name')
 
-  // Map active versions to their respective recipes
-  const recipes = (recipesData || []).map((recipe) => {
-    const activeVersion = (activeVersions || []).find((v) => v.recipe_id === recipe.id)
-    return {
-      ...recipe,
-      activeVersion,
-    }
-  })
+  // 4. Fetch active packaging materials
+  const { data: packagingMaterialsData } = await supabase
+    .from('packaging_materials')
+    .select('id, packaging_code, name')
+    .eq('status', 'Active')
+    .order('name')
 
   const stores = storesData || []
+  const sellingProducts = sellingProductsData || []
+  const rawMaterials = rawMaterialsData || []
+  const packagingMaterials = packagingMaterialsData || []
 
-  return <BatchCreateForm stores={stores} recipes={recipes} />
+  return (
+    <BatchCreateForm 
+      stores={stores} 
+      sellingProducts={sellingProducts} 
+      rawMaterials={rawMaterials}
+      packagingMaterials={packagingMaterials}
+    />
+  )
 }

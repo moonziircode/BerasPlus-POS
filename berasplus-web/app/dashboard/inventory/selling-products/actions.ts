@@ -9,6 +9,7 @@ export async function createSellingProduct(formData: {
   category_id: string
   sell_price: number
   min_stock_level: number
+  unit_weight_kg: number
 }) {
   const supabase = await createClient()
 
@@ -17,6 +18,7 @@ export async function createSellingProduct(formData: {
     category_id: formData.category_id,
     sell_price: formData.sell_price,
     min_stock_level: formData.min_stock_level,
+    unit_weight_kg: formData.unit_weight_kg,
     hpp_average: 0, // Defaults to 0 as HPP is calculated dynamically during production/purchase
     status: 'Active',
   }

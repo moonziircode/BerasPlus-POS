@@ -22,6 +22,7 @@ export default function AddSellingProductModal({ categories }: AddSellingProduct
   const [categoryId, setCategoryId] = useState('')
   const [sellPrice, setSellPrice] = useState('0')
   const [minStockLevel, setMinStockLevel] = useState('0')
+  const [unitWeightKg, setUnitWeightKg] = useState('1')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,12 +41,14 @@ export default function AddSellingProductModal({ categories }: AddSellingProduct
         category_id: categoryId,
         sell_price: parseFloat(sellPrice) || 0,
         min_stock_level: parseFloat(minStockLevel) || 0,
+        unit_weight_kg: parseFloat(unitWeightKg) || 1,
       })
       // Reset & Close
       setName('')
       setCategoryId('')
       setSellPrice('0')
       setMinStockLevel('0')
+      setUnitWeightKg('1')
       setIsOpen(false)
     } catch (err: any) {
       setErrorMsg(err.message || 'Gagal menambahkan produk jual baru.')
@@ -152,7 +155,7 @@ export default function AddSellingProductModal({ categories }: AddSellingProduct
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                     Harga Jual (Rp)
@@ -175,7 +178,27 @@ export default function AddSellingProductModal({ categories }: AddSellingProduct
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Batas Minimum Stok
+                    Berat Satuan (Kg)
+                  </label>
+                  <div className="relative mt-1">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400">
+                      <BarChart2 className="h-4 w-4" />
+                    </div>
+                    <input
+                      type="number"
+                      step="0.1"
+                      required
+                      placeholder="Contoh: 5"
+                      value={unitWeightKg}
+                      onChange={(e) => setUnitWeightKg(e.target.value)}
+                      className="block w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-3 text-sm text-zinc-900 placeholder-zinc-400 transition-all focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:border-emerald-500 dark:focus:bg-zinc-900"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Batas Min Stok
                   </label>
                   <div className="relative mt-1">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400">

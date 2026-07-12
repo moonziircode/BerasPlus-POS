@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { Package, PackageOpen, Box, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import StockHistoryTable from './StockHistoryTable'
+import PurchaseHistoryPanel from './PurchaseHistoryPanel'
 import { notFound } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
@@ -28,6 +29,7 @@ export default async function ItemDetailPage({ params }: PageProps) {
     const { data } = await supabase.from('raw_materials').select('*').eq('id', id).single()
     if (data) {
       product = {
+        id: data.id,
         code: data.code,
         name: data.name,
         category: data.category || 'Bahan Baku',
@@ -42,6 +44,7 @@ export default async function ItemDetailPage({ params }: PageProps) {
     const { data } = await supabase.from('packaging_materials').select('*').eq('id', id).single()
     if (data) {
       product = {
+        id: data.id,
         code: data.code,
         name: data.name,
         category: data.type || 'Kemasan',
@@ -166,6 +169,9 @@ export default async function ItemDetailPage({ params }: PageProps) {
           </div>
         </div>
       </div>
+
+      {/* Purchase History */}
+      <PurchaseHistoryPanel productId={product.id} />
 
       {/* Ledger History */}
       <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
