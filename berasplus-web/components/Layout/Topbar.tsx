@@ -22,11 +22,11 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-zinc-200 bg-white/80 px-6 backdrop-blur-md dark:border-slate-800 dark:bg-black/80">
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-zinc-200 bg-white/80 px-6 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80">
       <div className="flex items-center gap-4">
         {/* Burger menu for mobile */}
         <button 
-          className="rounded-lg p-1.5 hover:bg-zinc-100 lg:hidden dark:hover:bg-slate-800"
+          className="rounded-lg p-1.5 hover:bg-zinc-100 lg:hidden dark:hover:bg-zinc-800"
           onClick={onMenuToggle}
         >
           <Menu className="h-6 w-6 text-zinc-600 dark:text-zinc-300" />
@@ -40,7 +40,7 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
           <input 
             type="text" 
             placeholder="Cari..." 
-            className="w-full rounded-lg border border-zinc-200 bg-zinc-50 py-1.5 pl-9 pr-3 text-sm placeholder-zinc-400 focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-50 dark:placeholder-slate-400"
+            className="w-full rounded-lg border border-zinc-200 bg-zinc-50 py-1.5 pl-9 pr-3 text-sm placeholder-zinc-400 focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-500"
           />
         </div>
       </div>
@@ -48,7 +48,7 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
       {/* Right side items */}
       <div className="flex items-center gap-4">
         {/* Notification Icon */}
-        <button className="relative rounded-lg p-2 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white">
+        <button className="relative rounded-lg p-2 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100">
           <Bell className="h-5 w-5" />
           <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500" />
         </button>
@@ -62,7 +62,7 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
         <button 
           onClick={handleLogout}
           disabled={loggingOut}
-          className="flex items-center gap-2 rounded-lg border border-zinc-200 px-3.5 py-1.5 text-sm font-medium text-zinc-600 transition-all hover:bg-rose-50 hover:text-rose-600 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-rose-950/20 dark:hover:text-rose-400"
+          className="flex items-center gap-2 rounded-lg border border-zinc-200 px-3.5 py-1.5 text-sm font-medium text-zinc-600 transition-all hover:bg-rose-50 hover:text-rose-600 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-rose-950/20 dark:hover:text-rose-400"
         >
           {loggingOut ? (
             <Loader2 className="h-4 w-4 animate-spin" />

@@ -13,7 +13,7 @@ export default function QuickActions() {
 
   return (
     <div className="mt-4">
-      <div className="text-sm font-medium text-slate-400 mb-3">Quick Action</div>
+      <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-3">Quick Action</div>
       <div className="flex flex-wrap gap-3">
         {actions.map((action, i) => (
           <button key={i} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors border ${action.color}`}>

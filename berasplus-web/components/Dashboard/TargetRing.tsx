@@ -9,22 +9,22 @@ const COLORS = ['#10b981', '#1e293b'];
 
 export default function TargetRing() {
   return (
-    <div className="p-5 rounded-2xl border border-slate-800 bg-slate-800/50">
-      <h3 className="font-semibold text-slate-200 mb-6">Target Bulan Mei 2025</h3>
+    <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-800/50">
+      <h3 className="font-semibold text-zinc-800 dark:text-zinc-200 mb-6">Target Bulan Mei 2025</h3>
       
       <div className="flex items-center justify-between">
         <div className="space-y-4 text-sm w-full max-w-[200px]">
-          <div className="flex justify-between text-slate-400">
+          <div className="flex justify-between text-zinc-500 dark:text-zinc-400">
             <span>Target Bulan</span>
-            <span className="text-slate-200 font-medium">Rp 100.000.000</span>
+            <span className="text-zinc-800 dark:text-zinc-200 font-medium">Rp 100.000.000</span>
           </div>
-          <div className="flex justify-between text-slate-400">
+          <div className="flex justify-between text-zinc-500 dark:text-zinc-400">
             <span>Realisasi</span>
-            <span className="text-slate-200 font-medium">Rp 78.000.000</span>
+            <span className="text-zinc-800 dark:text-zinc-200 font-medium">Rp 78.000.000</span>
           </div>
-          <div className="flex justify-between text-slate-400">
+          <div className="flex justify-between text-zinc-500 dark:text-zinc-400">
             <span>Sisa Target</span>
-            <span className="text-slate-200 font-medium">Rp 22.000.000</span>
+            <span className="text-zinc-800 dark:text-zinc-200 font-medium">Rp 22.000.000</span>
           </div>
         </div>
         
@@ -48,13 +48,13 @@ export default function TargetRing() {
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex items-center justify-center flex-col">
-            <span className="text-2xl font-bold text-slate-50">78%</span>
+            <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">78%</span>
           </div>
         </div>
       </div>
       
-      <div className="mt-6 flex justify-between items-center text-xs text-slate-400 border-t border-slate-700/50 pt-4">
-        <div><span className="font-bold text-emerald-400">78%</span> tercapai</div>
+      <div className="mt-6 flex justify-between items-center text-xs text-zinc-500 dark:text-zinc-400 border-t border-zinc-200 dark:border-zinc-700/50 pt-4">
+        <div><span className="font-bold text-emerald-600 dark:text-emerald-400">78%</span> tercapai</div>
         <div>12 hari lagi</div>
       </div>
     </div>

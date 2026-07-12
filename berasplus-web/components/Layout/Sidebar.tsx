@@ -125,7 +125,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
       {/* Sidebar container */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-zinc-200 bg-white px-4 py-6 transition-transform duration-300 lg:static lg:translate-x-0 dark:border-slate-800 dark:bg-black/50 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-zinc-200 bg-white px-4 py-6 transition-transform duration-300 lg:static lg:translate-x-0 dark:border-zinc-800 dark:bg-zinc-950/50 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -136,10 +136,10 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             <span>Ramos Beras</span>
           </Link>
           <button 
-            className="rounded-lg p-1.5 hover:bg-zinc-100 lg:hidden dark:hover:bg-slate-800"
+            className="rounded-lg p-1.5 hover:bg-zinc-100 lg:hidden dark:hover:bg-zinc-800"
             onClick={() => setIsOpen(false)}
           >
-            <X className="h-5 w-5 text-zinc-500 dark:text-slate-400" />
+            <X className="h-5 w-5 text-zinc-500 dark:text-zinc-400" />
           </button>
         </div>
 
@@ -173,7 +173,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-medium transition-all cursor-pointer ${
                       isParentActive && !isMenuOpen
                         ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
-                        : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-50'
+                        : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -189,7 +189,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
                   {/* Sub Items */}
                   {isMenuOpen && (
-                    <div className="ml-4 pl-4 border-l border-zinc-100 space-y-1 dark:border-slate-800">
+                    <div className="ml-4 pl-4 border-l border-zinc-100 space-y-1 dark:border-zinc-800">
                       {item.subItems?.map((subItem) => {
                         const isSubActive = pathname === subItem.path
                         return (
@@ -199,7 +199,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
                               isSubActive
                                 ? 'bg-emerald-600/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400'
-                                : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
+                                : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
                             }`}
                           >
                             <subItem.icon className="h-4 w-4" />
@@ -220,7 +220,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all ${
                   isParentActive 
                     ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' 
-                    : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-50'
+                    : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50'
                 }`}
               >
                 <item.icon className="h-5 w-5" />

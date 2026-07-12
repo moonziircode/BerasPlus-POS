@@ -44,14 +44,14 @@ export default async function DashboardPage() {
     <div className="space-y-6 pb-12 max-w-[1600px] mx-auto">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-50 font-sans">Selamat datang kembali, Owner!</h1>
-          <p className="mt-1 text-sm text-slate-400 font-sans">Berikut ringkasan bisnis Lele Raya Mart hari ini.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 font-sans">Selamat datang kembali, Owner!</h1>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400 font-sans">Berikut ringkasan bisnis Lele Raya Mart hari ini.</p>
         </div>
         <div className="flex items-center gap-3">
-          <select className="bg-slate-900 border border-slate-700 text-slate-300 text-sm rounded-lg px-4 py-2 outline-none">
+          <select className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 text-sm rounded-lg px-4 py-2 outline-none">
             <option>Hari Ini, 23 Mei 2025</option>
           </select>
-          <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400">
+          <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-500 dark:text-zinc-400 font-bold">
             <span className="sr-only">Profile</span>
             O
           </div>
@@ -87,22 +87,22 @@ export default async function DashboardPage() {
       {/* Row 6: AI, Delivery, Forecast */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="lg:col-span-1">
-          <div className="p-5 rounded-2xl border border-slate-800 bg-slate-800/50 mb-4 h-[240px]">
-            <h3 className="font-semibold text-slate-200 text-sm mb-4">Customer Insight</h3>
+          <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-800/50 mb-4 h-[240px]">
+            <h3 className="font-semibold text-zinc-800 dark:text-zinc-200 text-sm mb-4">Customer Insight</h3>
             {/* Customer insight static data */}
             <div className="flex justify-between text-center mb-6">
-              <div><div className="text-lg font-bold text-emerald-400">18</div><div className="text-[9px] text-slate-400">Customer Baru</div></div>
-              <div><div className="text-lg font-bold text-amber-400">52</div><div className="text-[9px] text-slate-400">Repeat Order</div></div>
-              <div><div className="text-lg font-bold text-blue-400">34</div><div className="text-[9px] text-slate-400">Member</div></div>
-              <div><div className="text-lg font-bold text-purple-400">8</div><div className="text-[9px] text-slate-400">Reseller</div></div>
+              <div><div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">18</div><div className="text-[9px] text-zinc-500 dark:text-zinc-400">Customer Baru</div></div>
+              <div><div className="text-lg font-bold text-amber-600 dark:text-amber-400">52</div><div className="text-[9px] text-zinc-500 dark:text-zinc-400">Repeat Order</div></div>
+              <div><div className="text-lg font-bold text-blue-600 dark:text-blue-400">34</div><div className="text-[9px] text-zinc-500 dark:text-zinc-400">Member</div></div>
+              <div><div className="text-lg font-bold text-purple-600 dark:text-purple-400">8</div><div className="text-[9px] text-zinc-500 dark:text-zinc-400">Reseller</div></div>
             </div>
             <div className="space-y-3">
-              <div className="text-xs text-slate-400 font-medium">Top Customer</div>
-              <div className="flex justify-between text-xs"><span className="text-slate-300"><span className="text-slate-500 mr-2">1</span>Pak Haji</span><span className="font-mono text-slate-400">480 Kg</span></div>
-              <div className="flex justify-between text-xs"><span className="text-slate-300"><span className="text-slate-500 mr-2">2</span>Warung Padang</span><span className="font-mono text-slate-400">320 Kg</span></div>
+              <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Top Customer</div>
+              <div className="flex justify-between text-xs"><span className="text-zinc-700 dark:text-zinc-300"><span className="text-zinc-400 dark:text-zinc-500 mr-2">1</span>Pak Haji</span><span className="font-mono text-zinc-500 dark:text-zinc-400">480 Kg</span></div>
+              <div className="flex justify-between text-xs"><span className="text-zinc-700 dark:text-zinc-300"><span className="text-zinc-400 dark:text-zinc-500 mr-2">2</span>Warung Padang</span><span className="font-mono text-zinc-500 dark:text-zinc-400">320 Kg</span></div>
             </div>
           </div>
-          <button className="w-full py-2.5 text-xs font-medium text-slate-300 bg-slate-900 rounded-xl border border-slate-700/50 hover:bg-slate-800 transition-colors">Lihat Semua Customer</button>
+          <button className="w-full py-2.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">Lihat Semua Customer</button>
         </div>
         <AiAssistant />
         <DeliveryWidget />
