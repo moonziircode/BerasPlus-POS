@@ -19,13 +19,12 @@ export function exportToExcel(data: any, startDate: string, endDate: string) {
   const wsSales = XLSX.utils.json_to_sheet(salesData)
   XLSX.utils.book_append_sheet(wb, wsSales, 'Penjualan')
 
-  // 2. Procurements Sheet
+  // 2. Procurements Sheet (Direct Purchases)
   const procData = data.procurements.map((p: any) => ({
-    'Tanggal': format(new Date(p.created_at), 'dd MMM yyyy HH:mm', { locale: id }),
-    'Supplier': p.supplier_name || '-',
+    'Tanggal': format(new Date(p.purchase_date || p.created_at), 'dd MMM yyyy HH:mm', { locale: id }),
+    'Supplier': p.supplier_id || '-',
     'Status': p.status,
-    'Total Biaya': p.total_cost,
-    'Total Berat (Kg)': p.total_weight_kg,
+    'Total Biaya': p.total_amount,
     'Pembayaran': p.payment_status,
     'Catatan': p.notes || '-'
   }))
@@ -35,11 +34,11 @@ export function exportToExcel(data: any, startDate: string, endDate: string) {
   // 3. Mixing Sheet
   const mixData = data.mixing.map((m: any) => ({
     'Waktu Selesai': format(new Date(m.created_at), 'dd MMM yyyy HH:mm', { locale: id }),
-    'Batch ID': m.batch_id,
-    'Nama Resep': m.recipe_name || '-',
-    'Total Input (Kg)': m.total_input_kg,
-    'Total Output (Kg)': m.total_output_kg,
-    'Susut (Kg)': m.loss_kg,
+    'Batch ID': m.batch_number,
+    'Nama Resep': m.recipe_id || '-',
+    'Total Input (Kg)': m.total_input_weight_kg,
+    'Total Output (Kg)': m.total_output_weight_kg,
+    'Susut (Kg)': m.loss_weight_kg,
     'Catatan': m.notes || '-'
   }))
   const wsMix = XLSX.utils.json_to_sheet(mixData)
@@ -48,10 +47,9 @@ export function exportToExcel(data: any, startDate: string, endDate: string) {
   // 4. Repacking Sheet
   const repackData = data.repacking.map((r: any) => ({
     'Waktu Selesai': format(new Date(r.created_at), 'dd MMM yyyy HH:mm', { locale: id }),
-    'Batch ID': r.batch_id,
-    'Bahan Baku ID': r.source_material_id,
-    'Input (Kg)': r.total_input_kg,
-    'Total Output (Kg)': r.total_output_kg,
+    'Batch ID': r.batch_number,
+    'Total Input (Kg)': r.total_input_weight_kg,
+    'Total Output (Kg)': r.total_output_weight_kg,
     'Catatan': r.notes || '-'
   }))
   const wsRepack = XLSX.utils.json_to_sheet(repackData)
@@ -59,13 +57,12 @@ export function exportToExcel(data: any, startDate: string, endDate: string) {
 
   // 5. Inventory Ledger Sheet
   const ledgerData = data.ledger.map((l: any) => ({
-    'Waktu': format(new Date(l.created_at), 'dd MMM yyyy HH:mm', { locale: id }),
-    'Tipe Transaksi': l.transaction_type,
-    'Entitas ID': l.entity_id,
-    'Tipe Item': l.item_type,
-    'Perubahan Qty': l.quantity_change,
-    'Perubahan Kg': l.weight_change_kg,
-    'Keterangan': l.reference_id || '-'
+    'Waktu': format(new Date(l.timestamp), 'dd MMM yyyy HH:mm', { locale: id }),
+    'Tipe Produk': l.product_type,
+    'Produk ID': l.product_id,
+    'Tipe Pergerakan': l.movement_type,
+    'Perubahan Qty Kg': l.quantity_kg,
+    'Referensi': l.reference_id || '-'
   }))
   const wsLedger = XLSX.utils.json_to_sheet(ledgerData)
   XLSX.utils.book_append_sheet(wb, wsLedger, 'Mutasi Stok')

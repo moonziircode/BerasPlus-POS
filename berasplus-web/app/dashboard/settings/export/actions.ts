@@ -17,12 +17,12 @@ export async function fetchExportData(startDate: string, endDate: string) {
       .lte('created_at', endDate + ' 23:59:59')
       .order('created_at', { ascending: true })
 
-    // 2. Procurements
+    // 2. Procurements (Direct Purchases)
     const { data: procurements, error: procError } = await supabase
-      .from('procurements')
+      .from('direct_purchases')
       .select(`
         *,
-        items:procurement_items(*)
+        items:direct_purchase_items(*)
       `)
       .gte('created_at', startDate)
       .lte('created_at', endDate + ' 23:59:59')
@@ -33,8 +33,8 @@ export async function fetchExportData(startDate: string, endDate: string) {
       .from('production_batches')
       .select(`
         *,
-        materials:batch_materials(*),
-        results:batch_results(*)
+        inputs:production_batch_inputs(*),
+        outputs:production_batch_outputs(*)
       `)
       .eq('type', 'MIXING')
       .gte('created_at', startDate)
@@ -46,8 +46,8 @@ export async function fetchExportData(startDate: string, endDate: string) {
       .from('production_batches')
       .select(`
         *,
-        materials:batch_materials(*),
-        results:batch_results(*)
+        inputs:production_batch_inputs(*),
+        outputs:production_batch_outputs(*)
       `)
       .eq('type', 'REPACKING')
       .gte('created_at', startDate)
@@ -58,9 +58,9 @@ export async function fetchExportData(startDate: string, endDate: string) {
     const { data: ledger, error: ledgerError } = await supabase
       .from('inventory_ledger')
       .select(`*`)
-      .gte('created_at', startDate)
-      .lte('created_at', endDate + ' 23:59:59')
-      .order('created_at', { ascending: true })
+      .gte('timestamp', startDate)
+      .lte('timestamp', endDate + ' 23:59:59')
+      .order('timestamp', { ascending: true })
 
     if (salesError) throw new Error(salesError.message)
     if (procError) throw new Error(procError.message)
