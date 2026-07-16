@@ -6,46 +6,58 @@ export async function getReportsData(storeId: string) {
   const supabase = await createClient()
 
   // 1. Fetch recent inventory ledger movements for this store
-  // Join with inventory_locations to filter by store_id
   const { data: movements, error: movErr } = await supabase
     .from('inventory_ledger')
     .select(`
       id,
-      timestamp,
-      product_type,
+      created_at,
       product_id,
-      quantity_kg,
+      quantity,
       movement_type,
       hpp_at_time,
-      inventory_locations!inner(store_id, location_name)
+      products (
+        name,
+        product_type,
+        sell_price
+      )
     `)
-    .eq('inventory_locations.store_id', storeId)
-    .order('timestamp', { ascending: false })
+    .eq('store_id', storeId)
+    .order('created_at', { ascending: false })
     .limit(100)
 
   if (movErr) {
     console.error('Error fetching ledger for reports:', movErr)
   }
 
-  // 2. Fetch product names to match IDs
-  const { data: rawMaterials } = await supabase.from('raw_materials').select('id, name')
-  const { data: sellingProducts } = await supabase.from('selling_products').select('id, name')
-  const { data: packagingMaterials } = await supabase.from('packaging_materials').select('id, name')
+  const formattedMovements = (movements || []).map((m: any) => {
+    // Map V2 movement types to V1 UI types
+    let mappedType = m.movement_type
+    if (m.movement_type === 'PURCHASE') {
+      mappedType = 'GOODS_RECEIPT'
+    } else if (m.movement_type === 'BLENDING_IN') {
+      mappedType = 'PRODUCTION_OUTPUT'
+    } else if (m.movement_type === 'BLENDING_OUT') {
+      mappedType = 'PRODUCTION_INPUT_RAW'
+    }
 
-  const productMap: Record<string, string> = {}
-  rawMaterials?.forEach(r => { productMap[r.id] = r.name })
-  sellingProducts?.forEach(p => { productMap[p.id] = p.name })
-  packagingMaterials?.forEach(p => { productMap[p.id] = p.name })
+    // Map product type for UI
+    let mappedProductType = 'RAW_MATERIAL'
+    if (m.products?.product_type === 'KEMASAN') {
+      mappedProductType = 'PACKAGING'
+    } else if (m.products?.sell_price > 0) {
+      mappedProductType = 'SELLING_PRODUCT'
+    }
 
-  const formattedMovements = (movements || []).map((m: any) => ({
-    id: m.id,
-    date: new Date(m.timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
-    productName: productMap[m.product_id] || 'Unknown Product',
-    productType: m.product_type,
-    quantity: Number(m.quantity_kg),
-    type: m.movement_type,
-    location: m.inventory_locations?.location_name || 'Gudang'
-  }))
+    return {
+      id: m.id,
+      date: new Date(m.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
+      productName: m.products?.name || 'Unknown Product',
+      productType: mappedProductType,
+      quantity: Number(m.quantity),
+      type: mappedType,
+      location: 'Gudang/Toko'
+    }
+  })
 
   // 3. Fetch current inventory balances from view
   const { data: balances } = await supabase
@@ -59,7 +71,7 @@ export async function getReportsData(storeId: string) {
     .reduce((sum, m) => sum + m.quantity, 0)
 
   const totalStockOut = formattedMovements
-    .filter(m => ['PRODUCTION_INPUT_RAW', 'PRODUCTION_INPUT_PKG'].includes(m.type))
+    .filter(m => ['PRODUCTION_INPUT_RAW', 'PRODUCTION_INPUT_PKG', 'SALE'].includes(m.type))
     .reduce((sum, m) => sum + Math.abs(m.quantity), 0)
 
   const totalLoss = formattedMovements

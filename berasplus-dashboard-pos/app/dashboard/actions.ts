@@ -42,9 +42,9 @@ export async function getDashboardMetrics(storeId: string) {
     .from('customers')
     .select('*', { count: 'exact', head: true })
     
-  // 4. Batch Mixing Today
+  // 4. Batch Blending Today
   const { count: batchCount } = await supabase
-    .from('mixing_batches')
+    .from('blending_batches')
     .select('*', { count: 'exact', head: true })
     .gte('created_at', todayIso)
 
@@ -58,17 +58,17 @@ export async function getDashboardMetrics(storeId: string) {
   const lowStockCount = stocks?.filter(s => Number(s.current_stock_kg) <= 10).length || 0
   
   // 6. Nilai Persediaan (Estimated)
-  // Simply join selling_products hpp_average with stocks
+  // Simply join products hpp with stocks
   const { data: products } = await supabase
-    .from('selling_products')
-    .select('id, hpp_average')
+    .from('products')
+    .select('id, hpp')
     
   let nilaiPersediaan = 0
   if (stocks && products) {
     stocks.forEach(stock => {
       const p = products.find(p => p.id === stock.product_id)
       if (p) {
-        nilaiPersediaan += Number(stock.current_stock_kg) * Number(p.hpp_average)
+        nilaiPersediaan += Number(stock.current_stock_kg) * Number(p.hpp)
       }
     })
   }
@@ -98,44 +98,26 @@ export async function getRecentTransactions(storeId: string) {
     .from('sales_transactions')
     .select(`
       id, 
-      created_at, 
-      total, 
-      payment_method, 
-      status, 
-      customers (name),
-      sales_transaction_items (
-        quantity,
-        selling_products (name)
-      )
+      transaction_number,
+      total_amount,
+      created_at,
+      payment_method,
+      status
     `)
     .eq('store_id', storeId)
     .order('created_at', { ascending: false })
     .limit(5)
 
-  if (error) {
-    console.error('Error fetching recent transactions:', error)
-    return []
-  }
+  if (error) return []
 
-  return data.map((tx: any) => {
+  return data.map(tx => {
     const time = new Date(tx.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-    const cust = tx.customers?.name || 'Walk-in'
-    
-    // Just get the first product name for summary
-    const firstItem = tx.sales_transaction_items?.[0]
-    const prod = firstItem?.selling_products?.name || 'Multiple Products'
-    const qtyCount = tx.sales_transaction_items?.reduce((sum: number, item: any) => sum + Number(item.quantity), 0) || 0
-
     return {
-      id: tx.id,
-      time,
-      type: 'Penjualan',
-      cust,
-      prod: tx.sales_transaction_items?.length > 1 ? `${prod} +${tx.sales_transaction_items.length - 1} lainnya` : prod,
-      qty: `${qtyCount}`,
-      total: `Rp ${Number(tx.total).toLocaleString('id-ID')}`,
-      meth: tx.payment_method || 'Tunai',
-      status: tx.status
+      id: tx.transaction_number,
+      customer: 'Walk-in Customer',
+      amount: new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(tx.total_amount)),
+      status: tx.status === 'Completed' ? 'success' : 'pending',
+      time
     }
   })
 }
@@ -143,25 +125,26 @@ export async function getRecentTransactions(storeId: string) {
 export async function getChartData(storeId: string) {
   const supabase = await createClient()
 
-  // Past 30 days
+  // Past 7 days
   const d = new Date()
-  d.setDate(d.getDate() - 30)
-  d.setHours(0,0,0,0)
+  d.setDate(d.getDate() - 7)
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('sales_transactions')
-    .select('created_at, total')
+    .select('total_amount, created_at')
     .eq('store_id', storeId)
     .gte('created_at', d.toISOString())
-    .order('created_at')
+    .order('created_at', { ascending: true })
 
+  if (error) return []
+
+  // Group by date string
   const grouped: Record<string, number> = {}
   data?.forEach(tx => {
     const dateStr = new Date(tx.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
-    grouped[dateStr] = (grouped[dateStr] || 0) + Number(tx.total)
+    grouped[dateStr] = (grouped[dateStr] || 0) + Number(tx.total_amount)
   })
 
-  // Format into array for recharts
   // Format into array for recharts
   return Object.keys(grouped).map(date => ({
     date,
@@ -200,9 +183,9 @@ export async function getTopProducts(storeId: string) {
   const { data, error } = await supabase
     .from('sales_transactions')
     .select(`
-      sales_transaction_items (
+      sales_items (
         quantity,
-        selling_products (name)
+        products (name)
       )
     `)
     .eq('store_id', storeId)
@@ -212,8 +195,8 @@ export async function getTopProducts(storeId: string) {
 
   const prodCount: Record<string, number> = {}
   data?.forEach(tx => {
-    tx.sales_transaction_items?.forEach((item: any) => {
-      const name = item.selling_products?.name
+    tx.sales_items?.forEach((item: any) => {
+      const name = item.products?.name
       if (name) {
         prodCount[name] = (prodCount[name] || 0) + Number(item.quantity)
       }
@@ -241,13 +224,13 @@ export async function getTodayMixing(storeId: string) {
   d.setHours(0,0,0,0)
 
   const { data, error } = await supabase
-    .from('mixing_batches')
+    .from('blending_batches')
     .select(`
       batch_number,
       status,
       created_at,
-      total_yield_kg,
-      mixing_recipes (name)
+      result_quantity,
+      products:result_product_id (name)
     `)
     .eq('store_id', storeId)
     .gte('created_at', d.toISOString())
@@ -262,8 +245,8 @@ export async function getTodayMixing(storeId: string) {
     
     return {
       id: batch.batch_number,
-      name: (batch.mixing_recipes as any)?.name || 'Recipe',
-      qty: `${batch.total_yield_kg} Kg`,
+      name: (batch.products as any)?.name || 'Racikan',
+      qty: `${batch.result_quantity} Pcs/Kg`,
       status: statusLabel,
       time
     }
