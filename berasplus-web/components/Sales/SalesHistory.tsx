@@ -99,17 +99,13 @@ export default function SalesHistory({ initialTransactions, initialCount, stores
   // Export to CSV
   const exportToCSV = () => {
     if (transactions.length === 0) return
-    const headers = ['Nomor Invoice', 'Tanggal', 'Cabang', 'Kasir', 'Customer', 'Subtotal', 'Diskon', 'Pajak', 'Total', 'Metode Bayar', 'Status']
+    const headers = ['Nomor Invoice', 'Tanggal', 'Cabang', 'Kasir', 'Total Akhir', 'Metode Bayar', 'Status']
     const rows = transactions.map(tx => [
       tx.transaction_number,
       new Date(tx.created_at).toLocaleString('id-ID'),
       tx.stores?.name || 'Gudang Utama',
-      tx.users?.full_name || '-',
-      tx.customers?.name || 'Walk-in',
-      tx.subtotal,
-      tx.discount,
-      tx.tax,
-      tx.total,
+      tx.users?.full_name || 'Kasir',
+      tx.total_amount,
       tx.payment_method,
       tx.status
     ])
@@ -285,7 +281,6 @@ export default function SalesHistory({ initialTransactions, initialCount, stores
                   <th scope="col" className="px-6 py-4">Waktu</th>
                   <th scope="col" className="px-6 py-4">Toko / Cabang</th>
                   <th scope="col" className="px-6 py-4">Kasir</th>
-                  <th scope="col" className="px-6 py-4">Customer</th>
                   <th scope="col" className="px-6 py-4 text-right">Total</th>
                   <th scope="col" className="px-6 py-4">Metode Bayar</th>
                   <th scope="col" className="px-6 py-4">Status</th>
@@ -313,8 +308,7 @@ export default function SalesHistory({ initialTransactions, initialCount, stores
                       <td className="px-6 py-4 text-slate-400">{date}</td>
                       <td className="px-6 py-4">{storeName}</td>
                       <td className="px-6 py-4">{cashierName}</td>
-                      <td className="px-6 py-4">{customerName}</td>
-                      <td className="px-6 py-4 text-right font-semibold text-slate-200">{formatCurrency(tx.total)}</td>
+                      <td className="px-6 py-4 text-right font-semibold text-slate-200">{formatCurrency(tx.total_amount)}</td>
                       <td className="px-6 py-4">
                         <span className="rounded bg-slate-900 border border-slate-800 px-2 py-0.5 text-[10px] text-slate-300">
                           {tx.payment_method}
@@ -432,19 +426,19 @@ export default function SalesHistory({ initialTransactions, initialCount, stores
               <div className="space-y-4 mb-6">
                 <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Item Pembelian</h4>
                 <div className="space-y-2">
-                  {selectedTx.sales_transaction_items?.map((item: any) => {
-                    const price = Number(item.price_per_unit)
-                    const hpp = Number(item.hpp_per_unit || 0)
+                  {selectedTx.sales_items?.map((item: any) => {
+                    const price = Number(item.unit_price)
+                    const hpp = Number(item.hpp_at_time || 0)
                     const profit = (price - hpp) * Number(item.quantity)
                     
                     return (
                       <div key={item.id} className="flex justify-between items-center rounded-xl bg-slate-900/35 border border-slate-900/60 p-3 text-xs">
                         <div className="space-y-1">
-                          <div className="font-semibold text-slate-200">{item.selling_products?.name || 'Produk Habis'}</div>
-                          <div className="text-slate-400">{item.quantity} Qty × {formatCurrency(price)}</div>
+                          <div className="font-semibold text-slate-200">{item.products?.name || 'Produk Habis'}</div>
+                          <div className="text-slate-400">{item.quantity} {item.products?.unit_of_measure} × {formatCurrency(price)}</div>
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold text-slate-200">{formatCurrency(item.total)}</div>
+                          <div className="font-semibold text-slate-200">{formatCurrency(item.subtotal)}</div>
                           {hpp > 0 && (
                             <div className="text-[10px] text-emerald-500 font-medium flex items-center justify-end gap-1">
                               <TrendingUp className="w-3 h-3" /> Profit: {formatCurrency(profit)}
@@ -462,20 +456,16 @@ export default function SalesHistory({ initialTransactions, initialCount, stores
             <div className="border-t border-slate-900 pt-4 space-y-4">
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between text-slate-400">
-                  <span>Subtotal</span>
-                  <span>{formatCurrency(selectedTx.subtotal)}</span>
+                  <span>Tunai Dibayar</span>
+                  <span>{formatCurrency(selectedTx.amount_paid)}</span>
                 </div>
                 <div className="flex justify-between text-slate-400">
-                  <span>Diskon Keseluruhan</span>
-                  <span>-{formatCurrency(selectedTx.discount)}</span>
-                </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>Pajak (PPN)</span>
-                  <span>{formatCurrency(selectedTx.tax)}</span>
+                  <span>Kembalian</span>
+                  <span>{formatCurrency(selectedTx.change_amount)}</span>
                 </div>
                 <div className="flex justify-between border-t border-slate-900 pt-2 text-sm font-bold text-slate-200">
                   <span>Total Akhir</span>
-                  <span className="text-emerald-400">{formatCurrency(selectedTx.total)}</span>
+                  <span className="text-emerald-400">{formatCurrency(selectedTx.total_amount)}</span>
                 </div>
               </div>
 

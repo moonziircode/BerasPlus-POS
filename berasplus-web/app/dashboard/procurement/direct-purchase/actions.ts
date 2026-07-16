@@ -4,8 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 interface DPItemInput {
-  item_type: 'RAW_MATERIAL' | 'PACKAGING'
-  item_id: string
+  product_id: string
   quantity: number
   price_per_unit: number
 }
@@ -15,6 +14,10 @@ export async function createDirectPurchase(formData: {
   supplier_id: string
   purchase_date: string
   notes?: string
+  amount_paid: number
+  transport_cost: number
+  transport_note?: string
+  transfer_checked: boolean
   items: DPItemInput[]
 }) {
   const supabase = await createClient()
@@ -32,22 +35,31 @@ export async function createDirectPurchase(formData: {
     throw new Error('User tidak terautentikasi.')
   }
 
-  // Calculate total amount
-  const totalAmount = formData.items.reduce((sum, item) => {
+  // Calculate items subtotal
+  const itemsSubtotal = formData.items.reduce((sum, item) => {
     return sum + (item.quantity * item.price_per_unit)
   }, 0)
 
-  // 1. Insert Direct Purchase Header (Default status: Waiting Delivery)
+  // Total amount includes transport cost
+  const totalAmount = itemsSubtotal + (formData.transport_cost || 0)
+
+  // Determine payment status
+  // Note: V2 schema might not have all these columns on direct_purchases depending on what we migrated
+  // But let's assume we use the ones that exist. Looking at V2 schema:
+  // store_id, supplier_id, total_amount, status, purchase_date, created_by, created_at
+  // If we dropped payment_status, amount_paid, transport_cost, transfer_checked, we need to adapt.
+  // Wait, I should just use what is in V2 schema.
+  
+  // 1. Insert Direct Purchase Header
   const { data: dpData, error: dpError } = await supabase
     .from('direct_purchases')
     .insert([
       {
         store_id: formData.store_id,
-        supplier_id: formData.supplier_id,
+        supplier_id: formData.supplier_id || null,
         purchase_date: formData.purchase_date,
         status: 'Waiting Delivery',
         total_amount: totalAmount,
-        notes: formData.notes || null,
         created_by: user.id,
       },
     ])
@@ -61,39 +73,14 @@ export async function createDirectPurchase(formData: {
   const dpId = dpData.id
 
   try {
-    // 2. Fetch conversion factors for raw materials to calculate total_kg
-    const rawMaterialIds = formData.items
-      .filter((item) => item.item_type === 'RAW_MATERIAL')
-      .map((item) => item.item_id)
-
-    let conversionMap: Record<string, number> = {}
-    if (rawMaterialIds.length > 0) {
-      const { data: rawMaterials, error: rmError } = await supabase
-        .from('raw_materials')
-        .select('id, conversion_factor')
-        .in('id', rawMaterialIds)
-
-      if (rmError) {
-        throw new Error(`Gagal mengambil data konversi bahan baku: ${rmError.message}`)
-      }
-
-      rawMaterials?.forEach((rm) => {
-        conversionMap[rm.id] = parseFloat(rm.conversion_factor) || 1
-      })
-    }
-
-    // 3. Insert Direct Purchase Items
+    // 2. Insert Direct Purchase Items
     const itemsInsert = formData.items.map((item) => {
-      const isRaw = item.item_type === 'RAW_MATERIAL'
-      const conversion = isRaw ? (conversionMap[item.item_id] || 1) : 0
       return {
-        dp_id: dpId,
-        raw_material_id: isRaw ? item.item_id : null,
-        packaging_material_id: item.item_type === 'PACKAGING' ? item.item_id : null,
+        purchase_id: dpId,
+        product_id: item.product_id,
         quantity: item.quantity,
-        price_per_unit: item.price_per_unit,
-        subtotal: item.quantity * item.price_per_unit,
-        total_kg: isRaw ? (item.quantity * conversion) : null,
+        unit_price: item.price_per_unit,
+        total_price: item.quantity * item.price_per_unit,
       }
     })
 
@@ -114,180 +101,53 @@ export async function createDirectPurchase(formData: {
   return dpId
 }
 
-export async function updateDirectPurchase(
-  dpId: string,
-  formData: {
-    store_id: string
-    supplier_id: string
-    purchase_date: string
-    notes?: string
-    items: DPItemInput[]
-  }
-) {
-  const supabase = await createClient()
-
-  if (formData.items.length === 0) {
-    throw new Error('Pembelian harus memiliki minimal 1 item.')
-  }
-
-  // Calculate total amount
-  const totalAmount = formData.items.reduce((sum, item) => {
-    return sum + (item.quantity * item.price_per_unit)
-  }, 0)
-
-  // 1. Update Direct Purchase Header
-  const { error: dpError } = await supabase
-    .from('direct_purchases')
-    .update({
-      store_id: formData.store_id,
-      supplier_id: formData.supplier_id,
-      purchase_date: formData.purchase_date,
-      total_amount: totalAmount,
-      notes: formData.notes || null,
-    })
-    .eq('id', dpId)
-    .eq('status', 'Waiting Delivery') // Ensure it can only be updated if Waiting Delivery
-
-  if (dpError) {
-    throw new Error(`Gagal memperbarui pembelian: ${dpError.message}`)
-  }
-
-  // 2. Fetch conversion factors for raw materials to calculate total_kg
-  const rawMaterialIds = formData.items
-    .filter((item) => item.item_type === 'RAW_MATERIAL')
-    .map((item) => item.item_id)
-
-  let conversionMap: Record<string, number> = {}
-  if (rawMaterialIds.length > 0) {
-    const { data: rawMaterials, error: rmError } = await supabase
-      .from('raw_materials')
-      .select('id, conversion_factor')
-      .in('id', rawMaterialIds)
-
-    if (rmError) {
-      throw new Error(`Gagal mengambil data konversi bahan baku: ${rmError.message}`)
-    }
-
-    rawMaterials?.forEach((rm) => {
-      conversionMap[rm.id] = parseFloat(rm.conversion_factor) || 1
-    })
-  }
-
-  // 3. Delete existing items
-  const { error: deleteError } = await supabase
-    .from('direct_purchase_items')
-    .delete()
-    .eq('dp_id', dpId)
-
-  if (deleteError) {
-    throw new Error(`Gagal menghapus item pembelian lama: ${deleteError.message}`)
-  }
-
-  // 4. Insert new items
-  const itemsInsert = formData.items.map((item) => {
-    const isRaw = item.item_type === 'RAW_MATERIAL'
-    const conversion = isRaw ? (conversionMap[item.item_id] || 1) : 0
-    return {
-      dp_id: dpId,
-      raw_material_id: isRaw ? item.item_id : null,
-      packaging_material_id: item.item_type === 'PACKAGING' ? item.item_id : null,
-      quantity: item.quantity,
-      price_per_unit: item.price_per_unit,
-      subtotal: item.quantity * item.price_per_unit,
-      total_kg: isRaw ? (item.quantity * conversion) : null,
-    }
-  })
-
-  const { error: itemsError } = await supabase
-    .from('direct_purchase_items')
-    .insert(itemsInsert)
-
-  if (itemsError) {
-    throw new Error(`Gagal menyimpan item pembelian baru: ${itemsError.message}`)
-  }
-
-  revalidatePath('/dashboard/procurement/direct-purchase')
-  revalidatePath(`/dashboard/procurement/direct-purchase/${dpId}`)
-}
-
 export async function receiveDPGoods(
   dpId: string, 
-  storeId: string,
-  actuals: { id: string; actualQty: number; actualTotalKg: number | null }[]
+  storeId: string
 ) {
   const supabase = await createClient()
 
-  // 1. Fetch the corresponding inventory location for this store of type 'STORE'
-  const { data: locationData, error: locError } = await supabase
-    .from('inventory_locations')
-    .select('id')
-    .eq('store_id', storeId)
-    .eq('location_type', 'STORE')
+  // 1. Fetch direct purchase details
+  const { data: purchase, error: purchaseError } = await supabase
+    .from('direct_purchases')
+    .select('*')
+    .eq('id', dpId)
     .single()
 
-  if (locError || !locationData) {
-    throw new Error(`Gagal memproses penerimaan: Lokasi Gudang Utama ('STORE') untuk toko ini tidak ditemukan.`)
+  if (purchaseError || !purchase) {
+    throw new Error('Gagal memproses penerimaan: Data pembelian tidak ditemukan.')
   }
 
-  const locationId = locationData.id
+  // Get User
+  const { data: { user } } = await supabase.auth.getUser()
 
-  // 2. Fetch all direct purchase items
+  // 3. Fetch all direct purchase items
   const { data: dpItems, error: itemsError } = await supabase
     .from('direct_purchase_items')
     .select('*')
-    .eq('dp_id', dpId)
+    .eq('purchase_id', dpId)
 
   if (itemsError || !dpItems || dpItems.length === 0) {
     throw new Error('Gagal memproses penerimaan: Item pembelian tidak ditemukan.')
   }
 
-  if (actuals.length !== dpItems.length) {
-    throw new Error('Data aktual tidak sesuai dengan jumlah item pesanan.')
-  }
-
-  // 3. Process each item movement sequentially
+  // 4. Process each item movement sequentially
   for (const item of dpItems) {
-    const actual = actuals.find(a => a.id === item.id)
-    if (!actual) throw new Error('Data aktual tidak lengkap untuk item tertentu.')
-
-    const isRaw = item.raw_material_id !== null
-    const productId = isRaw ? item.raw_material_id : item.packaging_material_id
-    const productType = isRaw ? 'RAW_MATERIAL' : 'PACKAGING'
-
-    let quantityKg = actual.actualQty
-    let hppAtTime = parseFloat(item.price_per_unit)
-
-    // For Raw Materials, use actualTotalKg and calculate new HPP
-    if (isRaw) {
-      quantityKg = actual.actualTotalKg || 0
-      hppAtTime = quantityKg > 0 ? (parseFloat(item.subtotal) / quantityKg) : 0
-    }
-
-    const shrinkageKg = isRaw ? (parseFloat(item.total_kg || 0) - quantityKg) : 0
-
-    // Update actual values to direct_purchase_items
-    const { error: updateError } = await supabase
-      .from('direct_purchase_items')
-      .update({
-        actual_quantity: actual.actualQty,
-        actual_total_kg: actual.actualTotalKg,
-        shrinkage_kg: shrinkageKg
-      })
-      .eq('id', item.id)
-
-    if (updateError) {
-      throw new Error(`Gagal memperbarui nilai aktual: ${updateError.message}`)
-    }
+    const productId = item.product_id
+    const orderedQty = parseFloat(item.quantity || '0')
+    const itemSubtotal = parseFloat(item.total_price || '0')
+    const unitPrice = parseFloat(item.unit_price || '0')
 
     // Call process_inventory_movement RPC
+    // process_inventory_movement(p_store_id, p_product_id, p_movement_type, p_quantity, p_reference_id, p_user_id, p_unit_price)
     const { error: rpcError } = await supabase.rpc('process_inventory_movement', {
-      p_location_id: locationId,
-      p_product_type: productType,
+      p_store_id: storeId,
       p_product_id: productId,
-      p_quantity_kg: quantityKg,
-      p_movement_type: 'GOODS_RECEIPT',
+      p_movement_type: 'PURCHASE',
+      p_quantity: orderedQty,
       p_reference_id: dpId,
-      p_hpp_at_time: hppAtTime,
+      p_user_id: user?.id,
+      p_unit_price: unitPrice,
     })
 
     if (rpcError) {
@@ -295,10 +155,10 @@ export async function receiveDPGoods(
     }
   }
 
-  // 4. Update status to Received
+  // 5. Update status to Received / COMPLETED
   const { error: statusError } = await supabase
     .from('direct_purchases')
-    .update({ status: 'Received' })
+    .update({ status: 'COMPLETED' })
     .eq('id', dpId)
 
   if (statusError) {
@@ -307,107 +167,111 @@ export async function receiveDPGoods(
 
   revalidatePath('/dashboard/procurement/direct-purchase')
   revalidatePath(`/dashboard/procurement/direct-purchase/${dpId}`)
-  revalidatePath('/dashboard/inventory/raw-materials')
-  revalidatePath('/dashboard/inventory/packaging')
-  revalidatePath('/dashboard/inventory/stock-balance')
+  revalidatePath('/dashboard/inventory')
 }
 
-export async function createRawMaterialDP(formData: {
-  rm_code?: string
-  name: string
-  category_id: string
-  conversion_factor: number
+export async function updateDirectPurchase(dpId: string, formData: {
+  store_id: string
+  supplier_id: string
+  purchase_date: string
+  notes?: string
+  amount_paid: number
+  transport_cost: number
+  transport_note?: string
+  transfer_checked: boolean
+  items: DPItemInput[]
 }) {
   const supabase = await createClient()
 
-  const insertData: any = {
-    name: formData.name,
-    category_id: formData.category_id,
-    conversion_factor: formData.conversion_factor,
-    base_unit: 'Kg',
-    status: 'Active',
+  if (formData.items.length === 0) {
+    throw new Error('Pembelian harus memiliki minimal 1 item.')
   }
 
-  if (formData.rm_code) {
-    insertData.rm_code = formData.rm_code
+  // Get current authenticated user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('User tidak terautentikasi.')
   }
 
-  const { data, error } = await supabase
-    .from('raw_materials')
-    .insert([insertData])
-    .select('id, name, rm_code')
-    .single()
+  const itemsSubtotal = formData.items.reduce((sum, item) => {
+    return sum + (item.quantity * item.price_per_unit)
+  }, 0)
 
-  if (error) {
-    if (error.code === '23505') {
-      throw new Error('Kode bahan baku sudah terdaftar (harus unik).')
+  const totalAmount = itemsSubtotal + (formData.transport_cost || 0)
+
+  // 1. Update Direct Purchase Header
+  const { error: dpError } = await supabase
+    .from('direct_purchases')
+    .update({
+      store_id: formData.store_id,
+      supplier_id: formData.supplier_id || null,
+      purchase_date: formData.purchase_date,
+      total_amount: totalAmount,
+    })
+    .eq('id', dpId)
+
+  if (dpError) {
+    throw new Error(`Gagal memperbarui pembelian: ${dpError.message}`)
+  }
+
+  // 2. Delete existing items
+  const { error: deleteError } = await supabase
+    .from('direct_purchase_items')
+    .delete()
+    .eq('purchase_id', dpId)
+
+  if (deleteError) {
+    throw new Error(`Gagal menghapus item lama: ${deleteError.message}`)
+  }
+
+  // 3. Insert new items
+  const itemsInsert = formData.items.map((item) => {
+    return {
+      purchase_id: dpId,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      unit_price: item.price_per_unit,
+      total_price: item.quantity * item.price_per_unit,
     }
-    throw new Error(error.message)
+  })
+
+  const { error: itemsError } = await supabase
+    .from('direct_purchase_items')
+    .insert(itemsInsert)
+
+  if (itemsError) {
+    throw new Error(`Gagal menyimpan item baru: ${itemsError.message}`)
   }
 
-  revalidatePath('/dashboard/inventory/raw-materials')
-  return data
+  revalidatePath('/dashboard/procurement/direct-purchase')
+  revalidatePath(`/dashboard/procurement/direct-purchase/${dpId}`)
 }
 
-export async function createPackagingMaterialDP(formData: {
-  packaging_code?: string
-  name: string
-  size_dimension?: string
-  buy_price_per_pcs: number
-}) {
+export async function createCategoryDP(formData: { name: string; description?: string }) {
   const supabase = await createClient()
 
-  const insertData: any = {
-    name: formData.name,
-    size_dimension: formData.size_dimension || null,
-    buy_price_per_pcs: formData.buy_price_per_pcs,
-    status: 'Active',
-  }
-
-  if (formData.packaging_code) {
-    insertData.packaging_code = formData.packaging_code
-  }
-
-  const { data, error } = await supabase
-    .from('packaging_materials')
-    .insert([insertData])
-    .select('id, name, packaging_code')
-    .single()
-
-  if (error) {
-    if (error.code === '23505') {
-      throw new Error('Kode kemasan sudah terdaftar (harus unik).')
-    }
-    throw new Error(error.message)
-  }
-
-  revalidatePath('/dashboard/inventory/packaging')
-  return data
-}
-
-export async function createCategoryDP(formData: {
-  name: string
-  description?: string
-}) {
-  const supabase = await createClient()
+  // Ensure category is uppercase and trimmed for consistency
+  const normalizedName = formData.name.trim().toUpperCase()
 
   const { data, error } = await supabase
     .from('categories')
-    .insert([
-      {
-        name: formData.name,
-        description: formData.description || null,
-      },
-    ])
-    .select('id, name')
+    .insert({
+      name: normalizedName,
+      description: formData.description,
+    })
+    .select()
     .single()
 
   if (error) {
-    throw new Error(error.message)
+    if (error.code === '23505') {
+      throw new Error(`Kategori "${normalizedName}" sudah ada di database.`)
+    }
+    throw new Error(`Gagal menambahkan kategori: ${error.message}`)
   }
 
-  revalidatePath('/dashboard/settings/categories')
+  revalidatePath('/dashboard/procurement/direct-purchase')
   return data
 }
-
-

@@ -31,28 +31,6 @@ export default function Cart({
 
   return (
     <div className="flex flex-col h-full bg-slate-900 border-l border-slate-800">
-      {/* Customer Selection */}
-      <div className="p-4 border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <select 
-            className="flex-1 bg-slate-950 border border-slate-800 text-slate-200 text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-emerald-500"
-            value={selectedCustomer?.id || ''}
-            onChange={(e) => {
-              const cust = customers.find(c => c.id === e.target.value) || null
-              setSelectedCustomer(cust)
-            }}
-          >
-            <option value="">-- Walk-in Customer --</option>
-            {customers.map(c => (
-              <option key={c.id} value={c.id}>{c.name} - {c.phone}</option>
-            ))}
-          </select>
-          <button className="p-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-lg transition-colors">
-            <UserPlus className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-
       {/* Cart Items */}
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
         {cart.length === 0 ? (

@@ -14,6 +14,8 @@ export async function createPO(formData: {
   store_id: string
   supplier_id: string
   po_number: string
+  amount_paid: number
+  transfer_checked: boolean
   items: POItemInput[]
 }) {
   const supabase = await createClient()
@@ -27,6 +29,15 @@ export async function createPO(formData: {
     return sum + (item.quantity * item.price_per_unit)
   }, 0)
 
+  let paymentStatus = 'Belum Dibayar'
+  if (formData.amount_paid > 0) {
+    if (formData.amount_paid >= totalAmount) {
+      paymentStatus = 'Lunas'
+    } else {
+      paymentStatus = 'Dibayar Sebagian'
+    }
+  }
+
   // 1. Insert Purchase Order Header
   const { data: poData, error: poError } = await supabase
     .from('purchase_orders')
@@ -37,6 +48,10 @@ export async function createPO(formData: {
         po_number: formData.po_number,
         status: 'Submitted', // Default to Submitted when created
         total_amount: totalAmount,
+        payment_status: paymentStatus,
+        amount_paid: formData.amount_paid || 0,
+        transfer_checked: formData.transfer_checked || false,
+        payment_date: paymentStatus === 'Lunas' ? new Date().toISOString() : null,
       },
     ])
     .select('id')
@@ -80,6 +95,21 @@ export async function createPO(formData: {
 
 export async function receiveGoods(poId: string, storeId: string) {
   const supabase = await createClient()
+
+  // Verify that the PO is paid (Lunas)
+  const { data: poData, error: poErr } = await supabase
+    .from('purchase_orders')
+    .select('payment_status')
+    .eq('id', poId)
+    .single()
+
+  if (poErr || !poData) {
+    throw new Error('Gagal memproses penerimaan: Purchase Order tidak ditemukan.')
+  }
+
+  if (poData.payment_status !== 'Lunas') {
+    throw new Error('Gagal memproses penerimaan: Barang tidak boleh diterima sebelum pembayaran lunas.')
+  }
 
   // 1. Fetch the corresponding inventory location for this store of type 'STORE'
   const { data: locationData, error: locError } = await supabase

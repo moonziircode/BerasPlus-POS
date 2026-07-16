@@ -14,7 +14,7 @@ export type Product = {
   barcode: string | null
   sell_price: number
   wholesale_price: number
-  hpp_average: number
+  hpp: number
   current_stock: number
   image_url: string | null
 }
@@ -102,10 +102,10 @@ export default function POSClient({
         payment_method: paymentFormData.method,
         payment_amount: paymentFormData.amount,
         items: cart.map(item => ({
-          selling_product_id: item.product.id,
+          product_id: item.product.id,
           quantity: item.quantity,
           price_per_unit: item.price_per_unit,
-          hpp_per_unit: item.product.hpp_average,
+          hpp_per_unit: item.product.hpp,
           subtotal: item.quantity * item.price_per_unit,
           discount: item.discount,
           total: (item.quantity * item.price_per_unit) - item.discount

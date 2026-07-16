@@ -1,8 +1,9 @@
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Calendar, Store, User, FileText, CheckCircle, Clock, Truck } from 'lucide-react'
-import ReceiveDPGoodsModal from '../ReceiveDPGoodsModal'
+import { ArrowLeft, Calendar, Store, User, CheckCircle, Clock, Truck } from 'lucide-react'
+import { formatRupiah } from '@/utils/conversion'
+import { receiveDPGoods } from '../actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,13 +23,11 @@ export default async function DirectPurchaseDetailPage({ params }: PageProps) {
       purchase_date,
       status,
       total_amount,
-      notes,
       created_at,
       store_id,
       stores (
         id,
-        name,
-        store_code
+        name
       ),
       suppliers (
         id,
@@ -51,31 +50,17 @@ export default async function DirectPurchaseDetailPage({ params }: PageProps) {
     .select(`
       id,
       quantity,
-      price_per_unit,
-      subtotal,
-      total_kg,
-      raw_materials (
+      unit_price,
+      total_price,
+      products (
         id,
         name,
-        rm_code,
-        base_unit
-      ),
-      packaging_materials (
-        id,
-        name,
-        packaging_code
+        product_code,
+        unit_of_measure,
+        product_type
       )
     `)
-    .eq('dp_id', id)
-
-  // Rupiah formatting helper
-  const formatRupiah = (val: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(val)
-  }
+    .eq('purchase_id', id)
 
   // Date formatting helper
   const formatDate = (dateString: string) => {
@@ -93,28 +78,23 @@ export default async function DirectPurchaseDetailPage({ params }: PageProps) {
       : (purchase.stores as any).name
     : 'Gudang Cabang'
 
-  const supplierName = purchase.suppliers
+  const supplier = purchase.suppliers
     ? Array.isArray(purchase.suppliers)
-      ? purchase.suppliers[0]?.name
-      : (purchase.suppliers as any).name
-    : 'Pemasok Umum'
+      ? purchase.suppliers[0]
+      : (purchase.suppliers as any)
+    : null
 
-  const supplierContact = purchase.suppliers
-    ? Array.isArray(purchase.suppliers)
-      ? (purchase.suppliers[0] as any).contact_person || (purchase.suppliers[0] as any).phone || '-'
-      : (purchase.suppliers as any).contact_person || (purchase.suppliers as any).phone || '-'
-    : '-'
-
-  const supplierAddress = purchase.suppliers
-    ? Array.isArray(purchase.suppliers)
-      ? (purchase.suppliers[0] as any).address || '-'
-      : (purchase.suppliers as any).address || '-'
-    : '-'
+  const supplierName = supplier?.name || 'Pemasok Umum'
+  const supplierContact = supplier ? supplier.contact_person || supplier.phone || '-' : '-'
+  const supplierAddress = supplier?.address || '-'
 
   const isWaiting = purchase.status === 'Waiting Delivery'
+  
+  // Note: Since goods receiving is simpler now, we can just use a server action bound to a form button directly here
+  // But since we want to keep it simple, we'll just have a form with a single button if it's waiting delivery
 
   return (
-    <div className="space-y-6 font-sans max-w-4xl mx-auto">
+    <div className="space-y-6 font-sans max-w-4xl mx-auto pb-20">
       {/* Back Button & Action Header */}
       <div className="flex items-center justify-between">
         <Link
@@ -125,21 +105,18 @@ export default async function DirectPurchaseDetailPage({ params }: PageProps) {
         </Link>
 
         {isWaiting && (
-          <div className="flex gap-2">
-            <Link
-              href={`/dashboard/procurement/direct-purchase/${purchase.id}/edit`}
-              className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 shadow-sm transition-all hover:bg-zinc-50 active:scale-95 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          <form action={async () => {
+            'use server'
+            await receiveDPGoods(purchase.id, purchase.store_id)
+          }}>
+            <button
+              type="submit"
+              className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-500 active:scale-95"
             >
-              Edit Pembelian
-            </Link>
-            <ReceiveDPGoodsModal
-              dpId={purchase.id}
-              storeId={purchase.store_id}
-              supplierName={supplierName}
-              purchaseDate={formatDate(purchase.purchase_date)}
-              items={items || []}
-            />
-          </div>
+              <CheckCircle className="h-4 w-4" />
+              Terima Barang (Selesai)
+            </button>
+          </form>
         )}
       </div>
 
@@ -156,7 +133,7 @@ export default async function DirectPurchaseDetailPage({ params }: PageProps) {
             <h2 className="text-xl font-mono mt-1 font-bold">NOTA: {purchase.id.slice(0, 8).toUpperCase()}</h2>
           </div>
           <div>
-            {purchase.status === 'Received' ? (
+            {purchase.status === 'COMPLETED' ? (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3 py-1.5 text-xs font-bold text-emerald-100">
                 <CheckCircle className="h-4 w-4" />
                 <span>RECEIVED (SUDAH MASUK STOK)</span>
@@ -221,9 +198,7 @@ export default async function DirectPurchaseDetailPage({ params }: PageProps) {
               <thead>
                 <tr className="border-b border-zinc-200 dark:border-zinc-800 text-zinc-400 text-xs font-semibold">
                   <th className="py-3 font-semibold">Nama Item</th>
-                  <th className="py-3 font-semibold">Kode SKU</th>
                   <th className="py-3 font-semibold text-center">Jumlah (Qty)</th>
-                  <th className="py-3 font-semibold text-center">Total Kg</th>
                   <th className="py-3 font-semibold text-right">Harga Satuan</th>
                   <th className="py-3 font-semibold text-right">Subtotal</th>
                 </tr>
@@ -231,41 +206,34 @@ export default async function DirectPurchaseDetailPage({ params }: PageProps) {
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {items && items.length > 0 ? (
                   items.map((item) => {
-                    const isRaw = item.raw_materials !== null
-                    const name = isRaw 
-                      ? Array.isArray(item.raw_materials) ? item.raw_materials[0]?.name : (item.raw_materials as any).name
-                      : Array.isArray(item.packaging_materials) ? item.packaging_materials[0]?.name : (item.packaging_materials as any).name
-                    
-                    const code = isRaw 
-                      ? Array.isArray(item.raw_materials) ? item.raw_materials[0]?.rm_code : (item.raw_materials as any).rm_code
-                      : Array.isArray(item.packaging_materials) ? item.packaging_materials[0]?.packaging_code : (item.packaging_materials as any).packaging_code
-
-                    const unit = isRaw
-                      ? Array.isArray(item.raw_materials) ? item.raw_materials[0]?.base_unit : (item.raw_materials as any).base_unit
-                      : 'Pcs'
+                    const prod = item.products && !Array.isArray(item.products) ? (item.products as any) : {}
+                    const name = prod.name
+                    const code = prod.product_code
+                    const unit = prod.unit_of_measure
+                    const unitPrice = item.unit_price ? parseFloat(item.unit_price) : 0
+                    const subtotal = item.total_price ? parseFloat(item.total_price) : 0
 
                     return (
                       <tr key={item.id} className="text-zinc-900 dark:text-zinc-100">
-                        <td className="py-4 font-medium">{name}</td>
-                        <td className="py-4 font-mono text-xs text-zinc-500">{code}</td>
+                        <td className="py-4">
+                          <div className="font-medium">{name}</div>
+                          <div className="font-mono text-xs text-zinc-500 mt-1">{code} - {prod.product_type}</div>
+                        </td>
                         <td className="py-4 text-center font-semibold">
                           {parseFloat(item.quantity)} {unit}
                         </td>
-                        <td className="py-4 text-center font-semibold">
-                          {isRaw && item.total_kg ? `${parseFloat(item.total_kg)} Kg` : '-'}
-                        </td>
                         <td className="py-4 text-right font-mono">
-                          {formatRupiah(parseFloat(item.price_per_unit))}
+                          {formatRupiah(unitPrice)}
                         </td>
                         <td className="py-4 text-right font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-                          {formatRupiah(parseFloat(item.subtotal))}
+                          {formatRupiah(subtotal)}
                         </td>
                       </tr>
                     )
                   })
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-zinc-400">
+                    <td colSpan={4} className="py-8 text-center text-zinc-400">
                       Tidak ada item dalam nota ini.
                     </td>
                   </tr>
@@ -285,19 +253,6 @@ export default async function DirectPurchaseDetailPage({ params }: PageProps) {
               </div>
             </div>
           </div>
-
-          {/* Catatan / Notes */}
-          {purchase.notes && (
-            <div className="mt-8 border-t border-zinc-100 dark:border-zinc-800 pt-6">
-              <h4 className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase flex items-center gap-1.5 mb-2">
-                <FileText className="h-3.5 w-3.5" />
-                <span>CATATAN PEMBELIAN</span>
-              </h4>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400 italic bg-zinc-50 dark:bg-zinc-850 p-4 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/30">
-                "{purchase.notes}"
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </div>

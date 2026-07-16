@@ -11,7 +11,7 @@ export default async function SalesHistoryPage() {
   // Get active user and their store
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    redirect('/auth/login')
+    redirect('/login')
   }
 
   // Fetch initial sales transactions

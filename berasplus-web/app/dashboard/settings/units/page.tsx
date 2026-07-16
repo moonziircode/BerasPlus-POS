@@ -48,6 +48,7 @@ export default async function UnitsPage() {
                 <tr>
                   <th className="px-6 py-4">Nama Satuan</th>
                   <th className="px-6 py-4">Deskripsi</th>
+                  <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4 text-right">Aksi</th>
                 </tr>
               </thead>
@@ -59,6 +60,15 @@ export default async function UnitsPage() {
                     </td>
                     <td className="px-6 py-4 text-zinc-600 dark:text-zinc-400">
                       {unit.description || '-'}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
+                        unit.is_active 
+                          ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20' 
+                          : 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20'
+                      }`}>
+                        {unit.is_active ? 'Aktif' : 'Non-Aktif'}
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <EditUnitModal unit={unit} />

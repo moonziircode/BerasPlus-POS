@@ -19,34 +19,18 @@ export default async function CreateDirectPurchasePage() {
     .select('id, name')
     .order('name')
 
-  // 3. Fetch active raw materials
-  const { data: rawMaterials } = await supabase
-    .from('raw_materials')
-    .select('id, name, rm_code, conversion_factor')
-    .eq('status', 'Active')
-    .order('name')
-
-  // 4. Fetch active packaging materials
-  const { data: packagingMaterials } = await supabase
-    .from('packaging_materials')
-    .select('id, name, packaging_code')
-    .eq('status', 'Active')
-    .order('name')
-
-  // 5. Fetch categories for raw materials inline modal
-  const { data: categories } = await supabase
-    .from('categories')
-    .select('id, name')
+  // 3. Fetch active products
+  const { data: products } = await supabase
+    .from('products')
+    .select('id, name, product_code, unit_of_measure, product_type, weight_per_unit_kg')
+    .eq('is_active', true)
     .order('name')
 
   return (
     <DPCreateForm
       stores={stores || []}
       suppliers={suppliers || []}
-      rawMaterials={rawMaterials || []}
-      packagingMaterials={packagingMaterials || []}
-      categories={categories || []}
+      products={products || []}
     />
   )
 }
-

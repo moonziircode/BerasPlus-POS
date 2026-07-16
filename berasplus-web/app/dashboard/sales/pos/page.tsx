@@ -9,7 +9,7 @@ export default async function SalesPOSPage() {
   // Get active user and their store
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    redirect('/auth/login')
+    redirect('/login')
   }
 
   // Fetch the store assigned to this user

@@ -6,34 +6,40 @@ import { revalidatePath } from 'next/cache'
 export async function getPOSData(storeId: string) {
   const supabase = await createClient()
 
-  // 1. Get Selling Products
+  // 1. Get Selling Products (Any product with sell_price > 0 and is_active)
   const { data: products, error: productsError } = await supabase
-    .from('selling_products')
+    .from('products')
     .select('*')
-    .eq('status', 'Active')
+    .eq('is_active', true)
+    .gt('sell_price', 0)
 
   if (productsError) {
-    console.error('Error fetching selling products:', productsError)
+    console.error('Error fetching products:', productsError)
     return { error: productsError.message, products: [], customers: [] }
   }
 
-  // 2. Get Stock Balances
-  const { data: stocks, error: stocksError } = await supabase
-    .from('inventory_balances_view')
-    .select('*')
-    .eq('product_type', 'SELLING_PRODUCT')
+  // 2. Get Stock Balances from ledger
+  const { data: ledgers, error: ledgersError } = await supabase
+    .from('inventory_ledger')
+    .select('product_id, quantity')
     .eq('store_id', storeId) 
 
-  if (stocksError) {
-    console.error('Error fetching stocks:', stocksError)
+  if (ledgersError) {
+    console.error('Error fetching ledgers:', ledgersError)
+  }
+
+  const stockMap: Record<string, number> = {}
+  if (ledgers) {
+    ledgers.forEach(l => {
+      stockMap[l.product_id] = (stockMap[l.product_id] || 0) + Number(l.quantity)
+    })
   }
 
   // 3. Map stocks to products
   const productsWithStock = products?.map((product) => {
-    const stockInfo = stocks?.find((s) => s.product_id === product.id)
     return {
       ...product,
-      current_stock: stockInfo ? Number(stockInfo.current_stock_kg) : 0,
+      current_stock: stockMap[product.id] || 0,
     }
   }) || []
 
@@ -87,7 +93,7 @@ export async function processCheckout(payload: {
   payment_method: string,
   payment_amount: number,
   items: Array<{
-    selling_product_id: string,
+    product_id: string,
     quantity: number,
     price_per_unit: number,
     hpp_per_unit: number,
@@ -105,23 +111,64 @@ export async function processCheckout(payload: {
   }
 
   try {
-    const { data: transactionId, error } = await supabase.rpc('process_pos_transaction', {
-      p_store_id: payload.store_id,
-      p_cashier_id: user.id,
-      p_customer_id: payload.customer_id,
-      p_subtotal: payload.subtotal,
-      p_discount: payload.discount,
-      p_tax: payload.tax,
-      p_total: payload.total,
-      p_notes: payload.notes,
-      p_payment_method: payload.payment_method,
-      p_payment_amount: payload.payment_amount,
-      p_items: payload.items
-    })
+    // We process transaction directly since we removed RPC process_pos_transaction in V2
+    // Generate transaction number
+    const transactionNumber = 'TRX-' + new Date().toISOString().replace(/[-:.TZ]/g, '').slice(2, 14)
 
-    if (error) {
-      console.error('Checkout error:', error)
-      return { error: error.message }
+    // 1. Insert Sales Transaction
+    const { data: transaction, error: trxError } = await supabase
+      .from('sales_transactions')
+      .insert({
+        store_id: payload.store_id,
+        cashier_id: user.id,
+        transaction_number: transactionNumber,
+        total_amount: payload.total,
+        payment_method: payload.payment_method,
+        amount_paid: payload.payment_amount,
+        change_amount: payload.payment_amount - payload.total,
+        status: 'Completed'
+      })
+      .select('id')
+      .single()
+
+    if (trxError) {
+      console.error('Checkout error:', trxError)
+      return { error: trxError.message }
+    }
+
+    const transactionId = transaction.id
+
+    // 2. Insert Sales Items and Update Ledger
+    for (const item of payload.items) {
+      // Insert sales item
+      const { error: itemError } = await supabase
+        .from('sales_items')
+        .insert({
+          transaction_id: transactionId,
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: item.price_per_unit,
+          subtotal: item.total, // After discount
+          hpp_at_time: item.hpp_per_unit
+        })
+
+      if (itemError) {
+        throw new Error(`Failed to insert item: ${itemError.message}`)
+      }
+
+      // Update ledger
+      const { error: ledgerError } = await supabase.rpc('process_inventory_movement', {
+        p_store_id: payload.store_id,
+        p_product_id: item.product_id,
+        p_movement_type: 'SALE',
+        p_quantity: -item.quantity, // Negative for sale
+        p_reference_id: transactionId,
+        p_user_id: user.id
+      })
+
+      if (ledgerError) {
+        throw new Error(`Failed to update ledger: ${ledgerError.message}`)
+      }
     }
 
     revalidatePath('/dashboard/sales')
@@ -153,25 +200,19 @@ export async function getSalesTransactions(filters: {
       id,
       created_at,
       transaction_number,
-      total,
-      subtotal,
-      discount,
-      tax,
+      total_amount,
       payment_method,
+      amount_paid,
+      change_amount,
       status,
-      notes,
       stores ( name ),
-      users ( full_name ),
-      customers ( name ),
-      sales_transaction_items (
+      sales_items (
         id,
         quantity,
-        price_per_unit,
-        hpp_per_unit,
+        unit_price,
+        hpp_at_time,
         subtotal,
-        discount,
-        total,
-        selling_products ( name )
+        products ( name, unit_of_measure )
       )
     `, { count: 'exact' })
 

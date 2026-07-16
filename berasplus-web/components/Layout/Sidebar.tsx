@@ -41,14 +41,12 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-  { name: 'Sales', icon: ShoppingCart, path: '/dashboard/sales' },
   { 
     name: 'Procurement', 
     icon: Truck, 
     path: '/dashboard/procurement',
     subItems: [
-      { name: 'Pembelian Langsung', path: '/dashboard/procurement/direct-purchase', icon: ShoppingBag },
-      { name: 'Purchase Orders (PO)', path: '/dashboard/purchasing', icon: History }
+      { name: 'Pembelian Langsung', path: '/dashboard/procurement/direct-purchase', icon: ShoppingBag }
     ]
   },
   { 
@@ -56,20 +54,24 @@ const menuItems: MenuItem[] = [
     icon: Package, 
     path: '/dashboard/inventory',
     subItems: [
-      { name: 'Sisa Saldo Stok', path: '/dashboard/inventory/stock-balance', icon: Scale },
-      { name: 'Produk Jual', path: '/dashboard/inventory/selling-products', icon: ShoppingBag },
+      { name: 'Master Produk', path: '/dashboard/inventory', icon: PackageOpen },
+      { name: 'Sisa Stok', path: '/dashboard/inventory/stock-balance', icon: Scale },
     ]
   },
   { 
-    name: 'Mixing', 
+    name: 'Blending (Racikan)', 
     icon: Blend, 
-    path: '/dashboard/mixing',
+    path: '/dashboard/blending'
+  },
+  { 
+    name: 'Sales (Penjualan)', 
+    icon: ShoppingBag, 
+    path: '/dashboard/sales',
     subItems: [
-      { name: 'Resep', path: '/dashboard/mixing/recipes', icon: Blend },
-      { name: 'Riwayat Batch', path: '/dashboard/mixing/batches', icon: History }
+      { name: 'POS Kasir', path: '/dashboard/sales/pos', icon: ShoppingBag },
+      { name: 'Histori Penjualan', path: '/dashboard/sales', icon: History }
     ]
   },
-  { name: 'Repacking', icon: Package, path: '/dashboard/repacking' },
   { name: 'Finance', icon: Coins, path: '/dashboard/finance' },
   { name: 'Reports', icon: BarChart3, path: '/dashboard/reports' },
   { 
@@ -81,7 +83,7 @@ const menuItems: MenuItem[] = [
       { name: 'Kategori Produk', path: '/dashboard/settings/categories', icon: Tags },
       { name: 'Manajemen Karyawan', path: '/dashboard/settings/users', icon: Users },
       { name: 'Satuan & Konversi', path: '/dashboard/settings/units', icon: Scale },
-      { name: 'Ekspor Data', path: '/dashboard/settings/export', icon: PackageOpen },
+      { name: 'Pengaturan Global', path: '/dashboard/settings/global', icon: Settings },
     ]
   },
 ]
@@ -95,21 +97,21 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const pathname = usePathname()
   const [procurementOpen, setProcurementOpen] = useState(false)
   const [inventoryOpen, setInventoryOpen] = useState(false)
-  const [mixingOpen, setMixingOpen] = useState(false)
+  const [salesOpen, setSalesOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  // Auto-open settings/inventory/mixing/procurement sub-menus if currently on their routes
+  // Auto-open settings/inventory/sales/procurement sub-menus if currently on their routes
   useEffect(() => {
     if (pathname?.startsWith('/dashboard/inventory')) {
       setInventoryOpen(true)
     }
-    if (pathname?.startsWith('/dashboard/mixing')) {
-      setMixingOpen(true)
+    if (pathname?.startsWith('/dashboard/sales')) {
+      setSalesOpen(true)
     }
     if (pathname?.startsWith('/dashboard/settings')) {
       setSettingsOpen(true)
     }
-    if (pathname?.startsWith('/dashboard/procurement') || pathname?.startsWith('/dashboard/purchasing')) {
+    if (pathname?.startsWith('/dashboard/procurement')) {
       setProcurementOpen(true)
     }
   }, [pathname])
@@ -126,7 +128,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
       {/* Sidebar container */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-zinc-200 bg-white px-4 py-6 transition-transform duration-300 lg:static lg:translate-x-0 dark:border-zinc-800 dark:bg-zinc-950/50 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-zinc-200 bg-white px-4 py-6 transition-transform duration-300 lg:static lg:translate-x-0 dark:border-slate-800 dark:bg-black/50 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -137,10 +139,10 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             <span>Ramos Beras</span>
           </Link>
           <button 
-            className="rounded-lg p-1.5 hover:bg-zinc-100 lg:hidden dark:hover:bg-zinc-800"
+            className="rounded-lg p-1.5 hover:bg-zinc-100 lg:hidden dark:hover:bg-slate-800"
             onClick={() => setIsOpen(false)}
           >
-            <X className="h-5 w-5 text-zinc-500 dark:text-zinc-400" />
+            <X className="h-5 w-5 text-zinc-500 dark:text-slate-400" />
           </button>
         </div>
 
@@ -150,18 +152,17 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             const hasSubItems = !!item.subItems
             const isParentActive = 
               pathname === item.path || 
-              (hasSubItems && pathname?.startsWith(item.path)) ||
-              (item.name === 'Procurement' && pathname?.startsWith('/dashboard/purchasing'))
+              (hasSubItems && pathname?.startsWith(item.path))
             const isMenuOpen = 
               item.name === 'Inventory' ? inventoryOpen : 
               item.name === 'Settings' ? settingsOpen : 
-              item.name === 'Mixing' ? mixingOpen : 
+              item.name === 'Sales (Penjualan)' ? salesOpen : 
               item.name === 'Procurement' ? procurementOpen : false
             
             const handleToggle = () => {
               if (item.name === 'Inventory') setInventoryOpen(!inventoryOpen)
               if (item.name === 'Settings') setSettingsOpen(!settingsOpen)
-              if (item.name === 'Mixing') setMixingOpen(!mixingOpen)
+              if (item.name === 'Sales (Penjualan)') setSalesOpen(!salesOpen)
               if (item.name === 'Procurement') setProcurementOpen(!procurementOpen)
             }
 
@@ -174,7 +175,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-medium transition-all cursor-pointer ${
                       isParentActive && !isMenuOpen
                         ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
-                        : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50'
+                        : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-50'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -190,7 +191,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
                   {/* Sub Items */}
                   {isMenuOpen && (
-                    <div className="ml-4 pl-4 border-l border-zinc-100 space-y-1 dark:border-zinc-800">
+                    <div className="ml-4 pl-4 border-l border-zinc-100 space-y-1 dark:border-slate-800">
                       {item.subItems?.map((subItem) => {
                         const isSubActive = pathname === subItem.path
                         return (
@@ -200,7 +201,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
                               isSubActive
                                 ? 'bg-emerald-600/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400'
-                                : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
+                                : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
                             }`}
                           >
                             <subItem.icon className="h-4 w-4" />
@@ -221,7 +222,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all ${
                   isParentActive 
                     ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' 
-                    : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50'
+                    : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-50'
                 }`}
               >
                 <item.icon className="h-5 w-5" />
