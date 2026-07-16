@@ -13,12 +13,10 @@ export default async function DPEditPage({ params }: { params: Promise<{ id: str
   }
 
   // 1. Fetch Master Data
-  const [storesRes, suppliersRes, rawRes, pkgRes, catRes] = await Promise.all([
+  const [storesRes, suppliersRes, productsRes] = await Promise.all([
     supabase.from('stores').select('id, name').order('name'),
     supabase.from('suppliers').select('id, name').order('name'),
-    supabase.from('raw_materials').select('id, name, rm_code, conversion_factor, base_unit').eq('status', 'Active').order('name'),
-    supabase.from('packaging_materials').select('id, name, packaging_code').eq('status', 'Active').order('name'),
-    supabase.from('categories').select('id, name').order('name'),
+    supabase.from('products').select('id, name, product_code, unit_of_measure, product_type').eq('is_active', true).order('name')
   ])
 
   // 2. Fetch DP Header
@@ -41,7 +39,7 @@ export default async function DPEditPage({ params }: { params: Promise<{ id: str
   const { data: dpItems, error: itemsError } = await supabase
     .from('direct_purchase_items')
     .select('*')
-    .eq('dp_id', resolvedParams.id)
+    .eq('purchase_id', resolvedParams.id)
 
   if (itemsError || !dpItems) {
     notFound()
@@ -52,38 +50,20 @@ export default async function DPEditPage({ params }: { params: Promise<{ id: str
     store_id: dp.store_id,
     supplier_id: dp.supplier_id,
     purchase_date: dp.purchase_date,
-    notes: dp.notes,
-    amount_paid: parseFloat(dp.amount_paid || '0'),
-    transport_cost: parseFloat(dp.transport_cost || '0'),
-    transport_note: dp.transport_note,
-    transfer_checked: dp.transfer_checked || false,
     items: dpItems.map(item => ({
       id: item.id,
-      item_type: item.raw_material_id ? 'RAW_MATERIAL' : 'PACKAGING',
-      raw_material_id: item.raw_material_id,
-      packaging_material_id: item.packaging_material_id,
+      product_id: item.product_id,
       quantity: parseFloat(item.quantity || '0'),
-      total_kg: item.total_kg ? parseFloat(item.total_kg) : null,
-      price_per_unit: parseFloat(item.price_per_unit || '0'),
-      unit_weight_kg: item.unit_weight_kg ? parseFloat(item.unit_weight_kg) : null,
-      total_weight_kg: item.total_weight_kg ? parseFloat(item.total_weight_kg) : null,
+      price_per_unit: parseFloat(item.unit_price || '0'),
     }))
   }
-
-  // 4. Fetch conversion factors
-  const { data: conversionFactors } = await supabase
-    .from('conversion_factors')
-    .select('id, name, factor_to_kg')
 
   return (
     <div className="mx-auto max-w-7xl">
       <DPEditForm
         stores={storesRes.data || []}
         suppliers={suppliersRes.data || []}
-        rawMaterials={rawRes.data || []}
-        packagingMaterials={pkgRes.data || []}
-        categories={catRes.data || []}
-        conversionFactors={conversionFactors || []}
+        products={productsRes.data || []}
         initialData={initialData}
       />
     </div>

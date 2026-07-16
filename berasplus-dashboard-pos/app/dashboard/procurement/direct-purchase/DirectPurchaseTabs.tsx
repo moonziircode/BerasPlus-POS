@@ -33,7 +33,7 @@ export default function DirectPurchaseTabs({ purchases }: DirectPurchaseTabsProp
 
   const historyPurchases = useMemo(() => {
     return purchases.filter(
-      (p) => p.status === 'Received' || p.status === 'Cancelled'
+      (p) => p.status === 'COMPLETED' || p.status === 'Cancelled'
     )
   }, [purchases])
 
@@ -124,7 +124,7 @@ export default function DirectPurchaseTabs({ purchases }: DirectPurchaseTabsProp
                       : (purchase.suppliers as any).name
                     : 'Pemasok Umum'
 
-                  const isReceived = purchase.status === 'Received'
+                  const isReceived = purchase.status === 'COMPLETED'
                   const isWaiting = purchase.status === 'Waiting Delivery'
 
                   return (
@@ -156,7 +156,7 @@ export default function DirectPurchaseTabs({ purchases }: DirectPurchaseTabsProp
                         {isReceived ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/30">
                             <CheckCircle className="h-3.5 w-3.5" />
-                            <span>Received</span>
+                            <span>COMPLETED</span>
                           </span>
                         ) : isWaiting ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/30">

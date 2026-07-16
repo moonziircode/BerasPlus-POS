@@ -5,21 +5,29 @@ import { revalidatePath } from 'next/cache'
 
 // --- UNIT TYPES ACTIONS ---
 
-export async function createUnitType(formData: { name: string; description?: string }) {
+export async function createUnitType(formData: { name: string; description?: string; is_active?: boolean }) {
   const supabase = await createClient()
   const { error } = await supabase
     .from('unit_types')
-    .insert([{ name: formData.name, description: formData.description || null }])
+    .insert([{ 
+      name: formData.name, 
+      description: formData.description || null,
+      is_active: formData.is_active !== undefined ? formData.is_active : true 
+    }])
 
   if (error) throw new Error(error.message)
   revalidatePath('/dashboard/settings/units')
 }
 
-export async function updateUnitType(id: string, formData: { name: string; description?: string }) {
+export async function updateUnitType(id: string, formData: { name: string; description?: string; is_active?: boolean }) {
   const supabase = await createClient()
   const { error } = await supabase
     .from('unit_types')
-    .update({ name: formData.name, description: formData.description || null })
+    .update({ 
+      name: formData.name, 
+      description: formData.description || null,
+      is_active: formData.is_active !== undefined ? formData.is_active : true
+    })
     .eq('id', id)
 
   if (error) throw new Error(error.message)

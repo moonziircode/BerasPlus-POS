@@ -82,6 +82,7 @@ const menuItems: MenuItem[] = [
       { name: 'Kategori Produk', path: '/dashboard/settings/categories', icon: Tags },
       { name: 'Manajemen Karyawan', path: '/dashboard/settings/users', icon: Users },
       { name: 'Satuan & Konversi', path: '/dashboard/settings/units', icon: Scale },
+      { name: 'Pengaturan Global', path: '/dashboard/settings/global', icon: Settings },
     ]
   },
 ]

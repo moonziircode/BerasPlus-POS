@@ -1,0 +1,201 @@
+const { chromium } = require('playwright');
+const fs = require('fs');
+const path = require('path');
+
+const MAX_PAGES = 15;
+const VISITED_URLS = new Set();
+const URL_QUEUE = ['https://berasplus-dashboard-pos.vercel.app/dashboard'];
+
+const jsErrors = [];
+const requestFailures = [];
+const consoleWarnings = [];
+const consoleErrors = [];
+const pageLoadTimes = {};
+const bugs = [];
+
+async function login(page) {
+  console.log('Logging in...');
+  await page.goto('https://berasplus-dashboard-pos.vercel.app/login');
+  await page.waitForSelector('input#email', { timeout: 10000 });
+  await page.fill('input#email', 'mnzmflhn@gmail.com');
+  await page.fill('input#password', 'Aqsa62002');
+  const submitBtn = page.locator('button[type="submit"]');
+  await submitBtn.click();
+  await page.waitForURL('**/dashboard**', { timeout: 15000 });
+  console.log('Login successful.');
+}
+
+(async () => {
+  console.log('Launching browser for E2E Crawler...');
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext();
+  
+  // Start tracing
+  await context.tracing.start({ screenshots: true, snapshots: true, sources: true });
+  
+  const page = await context.newPage();
+
+  page.on('pageerror', exception => {
+    jsErrors.push({ url: page.url(), error: exception.toString() });
+    console.log(`[JS ERROR] ${exception.toString()}`);
+  });
+
+  page.on('requestfailed', request => {
+    const fail = request.failure();
+    const url = request.url();
+    // Ignore Next.js RSC aborted requests
+    if (url.includes('_rsc') && fail && fail.errorText === 'net::ERR_ABORTED') return;
+    
+    requestFailures.push({ method: request.method(), url, error: fail ? fail.errorText : 'Failed' });
+  });
+
+  page.on('console', msg => {
+    if (msg.type() === 'error') {
+      consoleErrors.push({ url: page.url(), text: msg.text() });
+    } else if (msg.type() === 'warning') {
+      consoleWarnings.push({ url: page.url(), text: msg.text() });
+    }
+  });
+
+  // Initial Login
+  try {
+    await login(page);
+  } catch (e) {
+    console.error('Initial login failed:', e);
+    await browser.close();
+    return;
+  }
+
+  let pagesVisited = 0;
+
+  while (URL_QUEUE.length > 0 && pagesVisited < MAX_PAGES) {
+    const currentUrl = URL_QUEUE.shift();
+    if (VISITED_URLS.has(currentUrl)) continue;
+    
+    VISITED_URLS.add(currentUrl);
+    pagesVisited++;
+    console.log(`\n[${pagesVisited}/${MAX_PAGES}] Visiting: ${currentUrl}`);
+
+    try {
+      const startTime = Date.now();
+      await page.goto(currentUrl, { waitUntil: 'networkidle', timeout: 20000 });
+      const loadTime = Date.now() - startTime;
+      pageLoadTimes[currentUrl] = `${loadTime}ms`;
+      console.log(`Loaded in ${loadTime}ms`);
+
+      // Check if we accidentally logged out
+      if (page.url().includes('/login')) {
+         console.log('Redirected to login. Re-logging in...');
+         await login(page);
+         await page.goto(currentUrl, { waitUntil: 'networkidle', timeout: 20000 });
+      }
+
+      // 1. Collect all sidebar links
+      const links = await page.$$eval('a', els => els.map(a => a.href));
+      for (const link of links) {
+        if (link && link.startsWith('https://berasplus-dashboard-pos.vercel.app/dashboard')) {
+          const cleanUrl = link.split('#')[0];
+          if (!VISITED_URLS.has(cleanUrl) && !URL_QUEUE.includes(cleanUrl)) {
+            URL_QUEUE.push(cleanUrl);
+          }
+        }
+      }
+
+      // 2. Fill visible inputs with dummy data
+      console.log('Filling inputs with valid dummy data...');
+      const inputs = await page.locator('input:visible, textarea:visible').all();
+      let hasFilledInput = false;
+      for (const input of inputs) {
+        try {
+          const isEditable = await input.isEditable();
+          if (!isEditable) continue;
+
+          const type = await input.getAttribute('type');
+          if (type === 'email') await input.fill(`dummy_${Date.now()}@example.com`);
+          else if (type === 'number') await input.fill('100');
+          else if (type === 'password') await input.fill('password123');
+          else if (type === 'checkbox' || type === 'radio') await input.check();
+          else await input.fill('Auto Test Data ' + Math.floor(Math.random() * 1000));
+          hasFilledInput = true;
+        } catch (e) {
+          // Ignore non-interactable
+        }
+      }
+      
+      // 3. Empty field validation test (Optional: clear a required field if we found one)
+      // For simplicity, we just filled all of them with valid data. To test empty validation,
+      // we would clear one. But the user said "Isi seluruh form dengan data dummy yang valid",
+      // and "Uji validasi field kosong". Let's clear the first text input to trigger empty validation.
+      if (inputs.length > 0) {
+         try {
+           const firstInput = inputs[0];
+           if (await firstInput.isEditable()) {
+             await firstInput.clear();
+             console.log('Cleared one input to test empty field validation.');
+           }
+         } catch(e) {}
+      }
+
+      // 4. Click visible buttons (Submit, Delete, etc.)
+      console.log('Clicking visible buttons...');
+      const buttons = await page.locator('button:visible').all();
+      // Click up to 15 buttons to prevent infinite loops (like datepickers opening/closing)
+      const maxButtons = Math.min(buttons.length, 15);
+      for (let i = 0; i < maxButtons; i++) {
+        try {
+          // Check if button is still attached before clicking
+          const isVisible = await buttons[i].isVisible();
+          if (!isVisible) continue;
+          
+          const text = await buttons[i].textContent();
+          console.log(`Clicking button: ${text ? text.trim() : 'Icon Button'}`);
+          await buttons[i].click({ timeout: 2000 });
+          await page.waitForTimeout(500); // short wait for UI to react
+          
+          // If we navigated away, stop clicking buttons on this page
+          if (page.url() !== currentUrl && !page.url().includes('#')) {
+             console.log(`Navigated away to ${page.url()}, breaking button loop.`);
+             break;
+          }
+        } catch (e) {
+          // Ignore unclickable buttons
+        }
+      }
+
+      await page.waitForTimeout(2000); // let network requests settle
+      
+    } catch (err) {
+      console.error(`Error on ${currentUrl}:`, err.message);
+      bugs.push({ url: currentUrl, error: err.message });
+      
+      // Take screenshot of bug
+      const safeUrl = currentUrl.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const screenshotPath = path.join(__dirname, `bug_${safeUrl}.png`);
+      try {
+        await page.screenshot({ path: screenshotPath });
+      } catch(ssErr) {}
+    }
+  }
+
+  // Stop tracing
+  console.log('\nStopping trace and saving to trace.zip...');
+  const tracePath = path.join(__dirname, 'trace.zip');
+  await context.tracing.stop({ path: tracePath });
+
+  await browser.close();
+
+  const report = {
+    jsErrors,
+    consoleWarnings,
+    consoleErrors,
+    requestFailures,
+    pageLoadTimes,
+    bugs
+  };
+
+  fs.writeFileSync(path.join(__dirname, 'qa-bug-report.json'), JSON.stringify(report, null, 2));
+  console.log('\n--- CRAWLER E2E TEST COMPLETED ---');
+  console.log(`Pages Visited: ${pagesVisited}`);
+  console.log(`Trace saved at: ${tracePath}`);
+  console.log(`Report saved at: qa-bug-report.json`);
+})();

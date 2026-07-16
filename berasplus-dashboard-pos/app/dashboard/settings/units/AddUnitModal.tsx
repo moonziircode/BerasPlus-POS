@@ -11,6 +11,7 @@ export default function AddUnitModal() {
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [isActive, setIsActive] = useState(true)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -18,10 +19,11 @@ export default function AddUnitModal() {
     setLoading(true)
 
     try {
-      await createUnitType({ name, description })
+      await createUnitType({ name, description, is_active: isActive })
       setIsOpen(false)
       setName('')
       setDescription('')
+      setIsActive(true)
     } catch (err: any) {
       setErrorMsg(err.message || 'Gagal menambahkan satuan.')
     } finally {
@@ -78,6 +80,18 @@ export default function AddUnitModal() {
                   placeholder="Misal: Satuan Kilogram untuk berat"
                   className="mt-1 block w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
                 />
+              </div>
+              <div className="flex items-center gap-2 py-1">
+                <input
+                  type="checkbox"
+                  id="add-unit-active"
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
+                  className="h-4 w-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 dark:border-zinc-700 dark:bg-zinc-800"
+                />
+                <label htmlFor="add-unit-active" className="text-sm font-medium text-zinc-700 dark:text-zinc-300 select-none cursor-pointer">
+                  Satuan Aktif (Dapat digunakan di aplikasi POS)
+                </label>
               </div>
               <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                 <button type="button" onClick={() => setIsOpen(false)} className="rounded-lg px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">Batal</button>
