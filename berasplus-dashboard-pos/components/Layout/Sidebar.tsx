@@ -46,8 +46,7 @@ const menuItems: MenuItem[] = [
     icon: Truck, 
     path: '/dashboard/procurement',
     subItems: [
-      { name: 'Pembelian Langsung', path: '/dashboard/procurement/direct-purchase', icon: ShoppingBag },
-      { name: 'Purchase Orders (PO)', path: '/dashboard/purchasing', icon: History }
+      { name: 'Pembelian Langsung', path: '/dashboard/procurement/direct-purchase', icon: ShoppingBag }
     ]
   },
   { 
@@ -55,22 +54,24 @@ const menuItems: MenuItem[] = [
     icon: Package, 
     path: '/dashboard/inventory',
     subItems: [
-      { name: 'Bahan Baku', path: '/dashboard/inventory/raw-materials', icon: PackageOpen },
-      { name: 'Kemasan', path: '/dashboard/inventory/packaging', icon: Box },
-      { name: 'Produk Jual', path: '/dashboard/inventory/selling-products', icon: ShoppingBag },
+      { name: 'Master Produk', path: '/dashboard/inventory', icon: PackageOpen },
       { name: 'Sisa Stok', path: '/dashboard/inventory/stock-balance', icon: Scale },
     ]
   },
   { 
-    name: 'Mixing', 
+    name: 'Blending (Racikan)', 
     icon: Blend, 
-    path: '/dashboard/mixing',
+    path: '/dashboard/blending'
+  },
+  { 
+    name: 'Sales (Penjualan)', 
+    icon: ShoppingBag, 
+    path: '/dashboard/sales',
     subItems: [
-      { name: 'Resep', path: '/dashboard/mixing/recipes', icon: Blend },
-      { name: 'Riwayat Batch', path: '/dashboard/mixing/batches', icon: History }
+      { name: 'POS Kasir', path: '/dashboard/sales/pos', icon: ShoppingBag },
+      { name: 'Histori Penjualan', path: '/dashboard/sales', icon: History }
     ]
   },
-  { name: 'Repacking', icon: Package, path: '/dashboard/repacking' },
   { name: 'Finance', icon: Coins, path: '/dashboard/finance' },
   { name: 'Reports', icon: BarChart3, path: '/dashboard/reports' },
   { 
@@ -96,21 +97,21 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const pathname = usePathname()
   const [procurementOpen, setProcurementOpen] = useState(false)
   const [inventoryOpen, setInventoryOpen] = useState(false)
-  const [mixingOpen, setMixingOpen] = useState(false)
+  const [salesOpen, setSalesOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  // Auto-open settings/inventory/mixing/procurement sub-menus if currently on their routes
+  // Auto-open settings/inventory/sales/procurement sub-menus if currently on their routes
   useEffect(() => {
     if (pathname?.startsWith('/dashboard/inventory')) {
       setInventoryOpen(true)
     }
-    if (pathname?.startsWith('/dashboard/mixing')) {
-      setMixingOpen(true)
+    if (pathname?.startsWith('/dashboard/sales')) {
+      setSalesOpen(true)
     }
     if (pathname?.startsWith('/dashboard/settings')) {
       setSettingsOpen(true)
     }
-    if (pathname?.startsWith('/dashboard/procurement') || pathname?.startsWith('/dashboard/purchasing')) {
+    if (pathname?.startsWith('/dashboard/procurement')) {
       setProcurementOpen(true)
     }
   }, [pathname])
@@ -151,18 +152,17 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             const hasSubItems = !!item.subItems
             const isParentActive = 
               pathname === item.path || 
-              (hasSubItems && pathname?.startsWith(item.path)) ||
-              (item.name === 'Procurement' && pathname?.startsWith('/dashboard/purchasing'))
+              (hasSubItems && pathname?.startsWith(item.path))
             const isMenuOpen = 
               item.name === 'Inventory' ? inventoryOpen : 
               item.name === 'Settings' ? settingsOpen : 
-              item.name === 'Mixing' ? mixingOpen : 
+              item.name === 'Sales (Penjualan)' ? salesOpen : 
               item.name === 'Procurement' ? procurementOpen : false
             
             const handleToggle = () => {
               if (item.name === 'Inventory') setInventoryOpen(!inventoryOpen)
               if (item.name === 'Settings') setSettingsOpen(!settingsOpen)
-              if (item.name === 'Mixing') setMixingOpen(!mixingOpen)
+              if (item.name === 'Sales (Penjualan)') setSalesOpen(!salesOpen)
               if (item.name === 'Procurement') setProcurementOpen(!procurementOpen)
             }
 
