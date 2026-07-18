@@ -96,7 +96,8 @@ export default function DPEditForm({
         .map((i) => ({
           product_id: i.product_id,
           quantity: parseFloat(i.quantity),
-          price_per_unit: parseFloat(i.price_per_unit)
+          price_per_unit: parseFloat(i.price_per_unit),
+          is_new: false
         }))
     }
 

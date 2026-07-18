@@ -111,7 +111,7 @@ export default async function InventoryPage(
       </div>
 
       {/* Products Table */}
-      <InventoryTable products={products || []} stockMap={stockMap} />
+      <InventoryTable products={(products as any) || []} stockMap={stockMap} />
     </div>
   )
 }

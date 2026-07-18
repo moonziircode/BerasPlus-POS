@@ -47,7 +47,7 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
 
   // 2. Filter logic
   const filteredBalances = useMemo(() => {
-    return balances.filter((item) => {
+    const result = balances.filter((item) => {
       const stock = parseFloat(item.current_stock_kg as string) || 0
       
       // Zero Stock Filter

@@ -26,11 +26,18 @@ export default async function CreateDirectPurchasePage() {
     .eq('is_active', true)
     .order('name')
 
+  // 4. Fetch categories
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('id, name')
+    .order('name')
+
   return (
     <DPCreateForm
       stores={stores || []}
       suppliers={suppliers || []}
       products={products || []}
+      categories={categories || []}
     />
   )
 }
