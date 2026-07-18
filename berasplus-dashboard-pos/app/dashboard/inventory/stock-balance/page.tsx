@@ -13,6 +13,18 @@ export default async function StockBalancePage() {
     .select('*')
     .order('location_name')
 
+  // Fetch unit_of_measure from products table
+  const { data: productsData } = await supabase
+    .from('products')
+    .select('id, unit_of_measure')
+
+  const productUnits = new Map(productsData?.map((p) => [p.id, p.unit_of_measure]))
+
+  const enrichedBalances = balances?.map((b) => ({
+    ...b,
+    unit_of_measure: productUnits.get(b.product_id) || 'Kg'
+  }))
+
   return (
     <div className="space-y-6 font-sans">
       {/* Page Header */}
@@ -31,7 +43,7 @@ export default async function StockBalancePage() {
           Gagal mengambil data saldo stok: {error.message}
         </div>
       ) : (
-        <StockBalanceTable balances={balances || []} />
+        <StockBalanceTable balances={enrichedBalances || []} />
       )}
     </div>
   )

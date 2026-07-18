@@ -12,6 +12,7 @@ interface StockBalance {
   product_name: string
   product_code: string
   current_stock_kg: string | number
+  unit_of_measure?: string
 }
 
 interface StockBalanceTableProps {
@@ -23,6 +24,17 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
   const [locationFilter, setLocationFilter] = useState('ALL')
   const [typeFilter, setTypeFilter] = useState('ALL')
   const [hideZero, setHideZero] = useState(true)
+  const [sortField, setSortField] = useState<'product_name' | 'product_code' | 'current_stock_kg'>('product_name')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+
+  const handleSort = (field: 'product_name' | 'product_code' | 'current_stock_kg') => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortOrder('asc')
+    }
+  }
 
   // 1. Get unique locations for filter options
   const locations = useMemo(() => {
@@ -57,7 +69,26 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
 
       return true
     })
-  }, [balances, search, locationFilter, typeFilter, hideZero])
+
+    result.sort((a, b) => {
+      let aVal: any = a[sortField]
+      let bVal: any = b[sortField]
+      
+      if (sortField === 'current_stock_kg') {
+        aVal = parseFloat(aVal as string) || 0
+        bVal = parseFloat(bVal as string) || 0
+      } else {
+        aVal = (aVal || '').toLowerCase()
+        bVal = (bVal || '').toLowerCase()
+      }
+
+      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1
+      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1
+      return 0
+    })
+
+    return result
+  }, [balances, search, locationFilter, typeFilter, hideZero, sortField, sortOrder])
 
   return (
     <div className="space-y-6 font-sans">
@@ -142,13 +173,19 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
                 <tr>
                   <th scope="col" className="px-6 py-4">Lokasi</th>
                   <th scope="col" className="px-6 py-4">Tipe</th>
-                  <th scope="col" className="px-6 py-4">Kode Produk</th>
-                  <th scope="col" className="px-6 py-4">Nama Produk</th>
-                  <th scope="col" className="px-6 py-4 text-right">Sisa Stok</th>
+                  <th scope="col" className="px-6 py-4 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800" onClick={() => handleSort('product_code')}>
+                    <div className="flex items-center gap-2">Kode Produk</div>
+                  </th>
+                  <th scope="col" className="px-6 py-4 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800" onClick={() => handleSort('product_name')}>
+                    <div className="flex items-center gap-2">Nama Produk</div>
+                  </th>
+                  <th scope="col" className="px-6 py-4 text-right cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800" onClick={() => handleSort('current_stock_kg')}>
+                    <div className="flex items-center justify-end gap-2">Sisa Stok</div>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                {filteredBalances.map((item, index) => {
+                {filteredBalances.map((item) => {
                   const stock = parseFloat(item.current_stock_kg as string) || 0
                   
                   // Color codes for product types
@@ -163,13 +200,19 @@ export default function StockBalanceTable({ balances }: StockBalanceTableProps) 
                   } else if (item.product_type === 'SELLING_PRODUCT') {
                     typeLabel = 'Produk Jual (SKU)'
                     typeClass = 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/30'
-                    unit = 'Kg'
+                    unit = 'Qty'
+                  }
+                  
+                  if (item.unit_of_measure) {
+                    unit = item.unit_of_measure
                   }
 
                   return (
                     <tr
                       key={`${item.location_id}-${item.product_type}-${item.product_id}`}
                       className="group transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30"
+                      onClick={() => window.location.href = `/dashboard/inventory/${item.product_id}`}
+                      style={{ cursor: 'pointer' }}
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">

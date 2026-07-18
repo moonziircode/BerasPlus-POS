@@ -40,6 +40,7 @@ export default function DPCreateForm({
   const [storeId, setStoreId] = useState(stores[0]?.id || '')
   const [supplierId, setSupplierId] = useState('')
   const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().slice(0, 10))
+  const [notes, setNotes] = useState('')
 
   const [items, setItems] = useState([{ id: Date.now(), product_id: '', quantity: '', price_per_unit: '' }])
 
@@ -63,6 +64,7 @@ export default function DPCreateForm({
       store_id: storeId,
       supplier_id: supplierId,
       purchase_date: purchaseDate,
+      notes: notes,
       amount_paid: 0,
       transport_cost: 0,
       transfer_checked: false,
@@ -107,24 +109,42 @@ export default function DPCreateForm({
           </div>
         )}
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 grid grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Toko / Gudang</label>
-            <select value={storeId} onChange={(e) => setStoreId(e.target.value)} required className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800">
-              <option value="">Pilih Toko</option>
-              {stores.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Toko / Gudang Tujuan</label>
+              <select value={storeId} onChange={(e) => setStoreId(e.target.value)} required className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800">
+                <option value="">Pilih Toko / Gudang</option>
+                {stores.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <p className="text-xs text-zinc-500">Stok akan ditambahkan ke lokasi ini. Penambahan toko hanya bisa melalui menu Cabang Toko.</p>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Supplier</label>
+              <select value={supplierId} onChange={(e) => setSupplierId(e.target.value)} required className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800">
+                <option value="">Pilih Supplier</option>
+                {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Supplier</label>
-            <select value={supplierId} onChange={(e) => setSupplierId(e.target.value)} required className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800">
-              <option value="">Pilih Supplier</option>
-              {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tanggal Pembelian</label>
-            <input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} required className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800" />
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tanggal Pembelian</label>
+              <input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} required className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800" />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Catatan Tambahan</label>
+              <textarea 
+                value={notes} 
+                onChange={(e) => setNotes(e.target.value)} 
+                rows={2}
+                placeholder="Misal: Pembelian urgent, atau nomor faktur vendor..."
+                className="w-full rounded-xl border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800 resize-none text-sm" 
+              />
+            </div>
           </div>
         </div>
 
